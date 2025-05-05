@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+enum USER_ROLE {
+  admin
+  agent
+}
+enum CALENDAR_DAYS_STATUS {
+  SALE
+  NOT_SALE
+  LEAVE
+  HOLIDAY
+  REMAINING_DAY
+}
+model Admin {
+  id            String @id @default(uuid())
+  cognitoId     String @unique
+  adminName     String
+  email         String @unique
+  phoneNumber   String?
+  imageUrl      String @default("/defaultPersonImage.png")
+  role          USER_ROLE
+  organizations Organization[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+model Agent {
+  id            String @id @default(uuid())
+  cognitoId     String @unique
+  agentName     String
+  email         String @unique
+  phoneNumber   String?
+  imageUrl      String @default("/defaultPersonImage.png")
+  role          USER_ROLE
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+model Organization {
+  id                  String @id @default(uuid())
+  imageUrl            String @default("/defaultOrganization.png")
+  adminCognitoId      String
+  admin               Admin @relation(fields: [adminCognitoId], references: [cognitoId], onDelete: Cascade)
+  organizationName    String
+  organizationKeyword String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  members             Member[]
+  sales               Sale[]
+}
+model Member {
+  id              String @id @default(uuid())
+  name            String
+  email           String
+  imageUrl        String @default("/defaultPersonImage.png")
+  phoneNumber     String?
+  monthlyTarget   Int
+  todaySale       Int
+  currentSale     Int
+  overallSale     Int
+  numberOfAccount Int?
+  salary          Int
+  keyword        String
+  targetCurrency  String
+  salaryCurrency  String
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  calendarDays    CalendarDays[]
+  calendarDetails CalendarDetails[]
+  sales           Sale[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+model CalendarDays {
+  id              String @id @default(uuid())
+  date            String
+  day             Int
+  status          CALENDAR_DAYS_STATUS
+  sale            String?
+  leaveReason     String?
+  memberId        String
+  member          Member? @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+model CalendarDetails {
+  id              String @id @default(uuid())
+  saleDays        String
+  notSaleDays     String
+  leaveDays       String
+  weekendDays     String
+  remainingDays   String
+  memberId        String
+  member          Member? @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+model Sale {
+  id                  String @id @default(uuid())
+  year                String
+  month               String
+  clientImageUrl      String
+  clientName          String
+  clientEmail         String
+  clientPhoneNumber   String?
+  totalPayment        String
+  paidAmount          String
+  remainingAmount     String
+  description         String?
+  organizationId      String
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  memberId            String
+  member              Member? @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  previousMonthId     String?
+  previousMonth       PreviousMonth? @relation(fields: [previousMonthId], references: [id], onDelete: Cascade)
+  createDate           String
+  createdAt           String
+  updatedAt           DateTime @updatedAt
+}
+model PreviousMonth {
+  id            String @id @default(uuid())
+  year          String
+  month         String
+  date          DateTime
+  target        String
+  totalSales    String
+  totalClient   Int
+  sales         Sale[]
+}
