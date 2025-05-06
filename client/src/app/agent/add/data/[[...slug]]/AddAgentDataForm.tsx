@@ -1,4 +1,5 @@
 import React from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AddMemberSalesSchema, AddMemberSalesType } from "@/lib/types";
@@ -23,6 +24,8 @@ interface Props {
 const AddAgentDataForm = ({ memberId, organizationId }: Props) => {
   const [addSale, result] = useAddAgentSaleMutation();
 
+  const router = useRouter();
+
   const form = useForm<AddMemberSalesType>({
     resolver: zodResolver(AddMemberSalesSchema),
     defaultValues: {
@@ -43,7 +46,7 @@ const AddAgentDataForm = ({ memberId, organizationId }: Props) => {
         memberId,
         organizationId,
       }).unwrap();
-      console.log(response);
+      router.back();
     } catch (error) {
       console.log(error);
     }
