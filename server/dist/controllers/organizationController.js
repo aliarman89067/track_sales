@@ -110,7 +110,7 @@ const createOrganization = (req, res) => __awaiter(void 0, void 0, void 0, funct
             const createMembers = members.map((memberData) => __awaiter(void 0, void 0, void 0, function* () {
                 const { name, email, salary, monthlyTarget, phoneNumber, imageUrl, targetCurrency, salaryCurrency, } = memberData;
                 // Create Calendars Data
-                const todayData = new Date();
+                const todayData = new Date(new Date().setMonth(new Date().getMonth() - 3));
                 const year = todayData.getFullYear();
                 const month = todayData.getMonth();
                 const totalDays = new Date(year, month + 1, 0).getDate();
@@ -142,6 +142,7 @@ const createOrganization = (req, res) => __awaiter(void 0, void 0, void 0, funct
                         targetCurrency,
                         salaryCurrency,
                         keyword: organizationKeyword,
+                        createdAt: todayData,
                     },
                 });
                 dateResult.map((date) => __awaiter(void 0, void 0, void 0, function* () {

@@ -36,7 +36,7 @@ const MemberDetailsContainer = ({
       </div>
     );
   }
-
+  console.log(memberData);
   return (
     <section className="w-full flex flex-col gap-5 max-w-screen-xl mx-auto mb-4">
       <div className="w-full mt-10">

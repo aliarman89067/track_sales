@@ -60,6 +60,7 @@ const createMembers = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     status: dayName.toLocaleLowerCase() === "sun" ? "HOLIDAY" : status,
                 });
             }
+            const customDate = new Date(new Date().setMonth(new Date().getMonth() - 3));
             const member = yield prisma.member.create({
                 data: {
                     imageUrl,
@@ -75,8 +76,10 @@ const createMembers = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     targetCurrency,
                     salaryCurrency,
                     keyword: checkOrganization.organizationKeyword,
+                    createdAt: customDate,
                 },
             });
+            console.log("Member created");
             dateResult.map((date) => __awaiter(void 0, void 0, void 0, function* () {
                 yield prisma.calendarDays.create({
                     data: {
@@ -106,6 +109,57 @@ const getMember = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             res.status(404).json({ message: "Payload is not correct!" });
         }
         const date = new Date();
+        const existingMember = yield prisma.member.findFirst({
+            where: {
+                id: memberId,
+            },
+            include: {
+                sales: true,
+            },
+        });
+        if (!existingMember) {
+            res.status(404).json({ message: "Member not found!" });
+            return;
+        }
+        const prevMonthInfo = getPrevMonthInfo(existingMember.createdAt);
+        prevMonthInfo.forEach((data) => __awaiter(void 0, void 0, void 0, function* () {
+            const existingPrevMonth = yield prisma.previousMonth.findFirst({
+                where: {
+                    year: data.year,
+                    month: data.month,
+                },
+            });
+            const prevMonthSales = yield prisma.sale.findMany({
+                where: {
+                    year: data.year.toString(),
+                    month: data.month,
+                },
+            });
+            if (!existingPrevMonth && prevMonthSales.length > 0) {
+                const prevMonth = yield prisma.previousMonth.create({
+                    data: {
+                        memberId: existingMember.id,
+                        year: data.year,
+                        month: data.month,
+                        target: existingMember.monthlyTarget.toString(),
+                        totalSales: existingMember.sales.length.toString(),
+                    },
+                });
+                const salesId = existingMember.sales.map((sale) => sale.id);
+                if (salesId.length > 0) {
+                    salesId.forEach((sale) => __awaiter(void 0, void 0, void 0, function* () {
+                        yield prisma.sale.update({
+                            where: {
+                                id: sale,
+                            },
+                            data: {
+                                previousMonthId: prevMonth.id,
+                            },
+                        });
+                    }));
+                }
+            }
+        }));
         const getTodaySales = yield prisma.sale.findMany({
             where: {
                 memberId,
@@ -135,6 +189,11 @@ const getMember = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                         createdAt: "asc",
                     },
                 },
+                previousMonths: {
+                    include: {
+                        sales: true,
+                    },
+                },
             },
         });
         if (!member) {
@@ -151,6 +210,38 @@ const getMember = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getMember = getMember;
+const getPrevMonthInfo = (dateStr) => {
+    const currentDate = new Date();
+    const oldDate = new Date(dateStr);
+    const yearDiff = currentDate.getFullYear() - oldDate.getFullYear();
+    const monthDiff = currentDate.getMonth() - oldDate.getMonth();
+    const totalMonths = yearDiff * 12 + monthDiff;
+    const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+    ];
+    const result = [];
+    for (let i = 0; i < totalMonths; i++) {
+        const month = monthNames[oldDate.getMonth()];
+        const year = oldDate.getFullYear();
+        result.push({
+            month,
+            year,
+        });
+        oldDate.setMonth(oldDate.getMonth() + 1);
+    }
+    return result;
+};
 const addLeave = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const { leave, memberId } = req.body;

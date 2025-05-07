@@ -166,7 +166,9 @@ export const createOrganization = async (
           salaryCurrency,
         } = memberData;
         // Create Calendars Data
-        const todayData = new Date();
+        const todayData = new Date(
+          new Date().setMonth(new Date().getMonth() - 3)
+        );
         const year = todayData.getFullYear();
         const month = todayData.getMonth();
         const totalDays = new Date(year, month + 1, 0).getDate();
@@ -213,6 +215,7 @@ export const createOrganization = async (
             targetCurrency,
             salaryCurrency,
             keyword: organizationKeyword,
+            createdAt: todayData,
           },
         });
         dateResult.map(async (date) => {

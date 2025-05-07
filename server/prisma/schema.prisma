@@ -59,27 +59,28 @@ model Organization {
   sales               Sale[]
 }
 model Member {
-  id              String @id @default(uuid())
-  name            String
-  email           String
-  imageUrl        String @default("/defaultPersonImage.png")
-  phoneNumber     String?
-  monthlyTarget   Int
-  todaySale       Int
-  currentSale     Int
-  overallSale     Int
-  numberOfAccount Int?
-  salary          Int
-  keyword        String
-  targetCurrency  String
-  salaryCurrency  String
-  organizationId  String
-  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  calendarDays    CalendarDays[]
-  calendarDetails CalendarDetails[]
-  sales           Sale[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                String @id @default(uuid())
+  name              String
+  email             String
+  imageUrl          String @default("/defaultPersonImage.png")
+  phoneNumber       String?
+  monthlyTarget     Int
+  todaySale         Int
+  currentSale       Int
+  overallSale       Int
+  numberOfAccount   Int?
+  salary            Int
+  keyword           String
+  targetCurrency    String
+  salaryCurrency    String
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  calendarDays      CalendarDays[]
+  calendarDetails   CalendarDetails[]
+  sales             Sale[]
+  previousMonths    PreviousMonth[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 model CalendarDays {
   id              String @id @default(uuid())
@@ -125,11 +126,13 @@ model Sale {
 }
 model PreviousMonth {
   id            String @id @default(uuid())
-  year          String
+  memberId      String?
+  member      Member? @relation(fields: [memberId], references: [id])
+  year          Int
   month         String
-  date          DateTime
+  // date          DateTime
   target        String
   totalSales    String
-  totalClient   Int
+  // totalClient   Int
   sales         Sale[]
 }

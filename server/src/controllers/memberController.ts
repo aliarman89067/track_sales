@@ -104,6 +104,10 @@ export const createMembers = async (
         });
       }
 
+      const customDate = new Date(
+        new Date().setMonth(new Date().getMonth() - 3)
+      );
+
       const member = await prisma.member.create({
         data: {
           imageUrl,
@@ -119,8 +123,10 @@ export const createMembers = async (
           targetCurrency,
           salaryCurrency,
           keyword: checkOrganization.organizationKeyword,
+          createdAt: customDate,
         },
       });
+      console.log("Member created");
       dateResult.map(async (date) => {
         await prisma.calendarDays.create({
           data: {
@@ -154,6 +160,62 @@ export const getMember = async (req: GetMemberRequest, res: Response) => {
       res.status(404).json({ message: "Payload is not correct!" });
     }
     const date = new Date();
+
+    const existingMember = await prisma.member.findFirst({
+      where: {
+        id: memberId,
+      },
+      include: {
+        sales: true,
+      },
+    });
+
+    if (!existingMember) {
+      res.status(404).json({ message: "Member not found!" });
+      return;
+    }
+
+    const prevMonthInfo = getPrevMonthInfo(existingMember.createdAt);
+
+    prevMonthInfo.forEach(async (data) => {
+      const existingPrevMonth = await prisma.previousMonth.findFirst({
+        where: {
+          year: data.year,
+          month: data.month,
+        },
+      });
+      const prevMonthSales = await prisma.sale.findMany({
+        where: {
+          year: data.year.toString(),
+          month: data.month,
+        },
+      });
+      if (!existingPrevMonth && prevMonthSales.length > 0) {
+        const prevMonth = await prisma.previousMonth.create({
+          data: {
+            memberId: existingMember.id,
+            year: data.year,
+            month: data.month,
+            target: existingMember.monthlyTarget.toString(),
+            totalSales: existingMember.sales.length.toString(),
+          },
+        });
+        const salesId = existingMember.sales.map((sale) => sale.id);
+        if (salesId.length > 0) {
+          salesId.forEach(async (sale) => {
+            await prisma.sale.update({
+              where: {
+                id: sale,
+              },
+              data: {
+                previousMonthId: prevMonth.id,
+              },
+            });
+          });
+        }
+      }
+    });
+
     const getTodaySales = await prisma.sale.findMany({
       where: {
         memberId,
@@ -183,6 +245,11 @@ export const getMember = async (req: GetMemberRequest, res: Response) => {
             createdAt: "asc",
           },
         },
+        previousMonths: {
+          include: {
+            sales: true,
+          },
+        },
       },
     });
     if (!member) {
@@ -196,6 +263,43 @@ export const getMember = async (req: GetMemberRequest, res: Response) => {
       .status(500)
       .json({ message: `Failed to retreive member ${error.message ?? ""}` });
   }
+};
+
+const getPrevMonthInfo = (dateStr: Date) => {
+  const currentDate = new Date();
+  const oldDate = new Date(dateStr);
+
+  const yearDiff = currentDate.getFullYear() - oldDate.getFullYear();
+  const monthDiff = currentDate.getMonth() - oldDate.getMonth();
+  const totalMonths = yearDiff * 12 + monthDiff;
+
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const result = [];
+
+  for (let i = 0; i < totalMonths; i++) {
+    const month = monthNames[oldDate.getMonth()];
+    const year = oldDate.getFullYear();
+    result.push({
+      month,
+      year,
+    });
+    oldDate.setMonth(oldDate.getMonth() + 1);
+  }
+  return result;
 };
 
 interface AddLeaveRequest extends Request {
