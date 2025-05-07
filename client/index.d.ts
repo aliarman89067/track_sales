@@ -120,6 +120,18 @@ interface Sales {
   description?: string;
   createdAt: string;
 }
+
+interface prevMonthHistory {
+  id: string;
+  memberId: string;
+  year: number;
+  month: string;
+  target: string;
+  totalSales: string;
+  status: "Not_Achieved" | "Achieved";
+  sales: Sales[];
+}
+
 interface MembersDetailsProps {
   id: string;
   name: string;
@@ -140,6 +152,7 @@ interface MembersDetailsProps {
   sales: Sales[];
   createdAt: Date;
   updatedAt: Date;
+  previousMonths: prevMonthHistory[];
 }
 
 interface CalendarDaysProps {

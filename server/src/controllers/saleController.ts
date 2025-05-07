@@ -85,8 +85,6 @@ export const addNewSale = async (req: Request, res: Response) => {
       },
     });
 
-    // const customDate = new Date(new Date().setMonth(new Date().getMonth() - 1));
-
     const response = await prisma.sale.create({
       data: {
         year,

@@ -177,20 +177,44 @@ export const getMember = async (req: GetMemberRequest, res: Response) => {
 
     const prevMonthInfo = getPrevMonthInfo(existingMember.createdAt);
 
-    prevMonthInfo.forEach(async (data) => {
+    console.log("prevMonthInfo", prevMonthInfo);
+
+    for (const data of prevMonthInfo) {
       const existingPrevMonth = await prisma.previousMonth.findFirst({
         where: {
+          memberId,
           year: data.year,
           month: data.month,
         },
       });
+
       const prevMonthSales = await prisma.sale.findMany({
         where: {
+          memberId,
           year: data.year.toString(),
           month: data.month,
         },
       });
+
+      console.log("existingPrevMonth", existingPrevMonth);
+      console.log("prevMonthSales", prevMonthSales.length);
+
       if (!existingPrevMonth && prevMonthSales.length > 0) {
+        console.log("Previous month not exist. So Creating one.");
+
+        const totalSalesAmount = prevMonthSales.reduce(
+          (sum, acc) => sum + Number(acc.totalPayment),
+          0
+        );
+
+        console.log("Total Sales Amount", totalSalesAmount);
+        console.log("Member Monthly Target", existingMember.monthlyTarget);
+
+        const status =
+          totalSalesAmount < existingMember.monthlyTarget
+            ? "Not_Achieved"
+            : "Achieved";
+
         const prevMonth = await prisma.previousMonth.create({
           data: {
             memberId: existingMember.id,
@@ -198,23 +222,20 @@ export const getMember = async (req: GetMemberRequest, res: Response) => {
             month: data.month,
             target: existingMember.monthlyTarget.toString(),
             totalSales: existingMember.sales.length.toString(),
+            status, // Optional: include if you want to store it
           },
         });
-        const salesId = existingMember.sales.map((sale) => sale.id);
-        if (salesId.length > 0) {
-          salesId.forEach(async (sale) => {
-            await prisma.sale.update({
-              where: {
-                id: sale,
-              },
-              data: {
-                previousMonthId: prevMonth.id,
-              },
-            });
+
+        const salesId = prevMonthSales.map((sale) => sale.id);
+
+        for (const saleId of salesId) {
+          await prisma.sale.update({
+            where: { id: saleId },
+            data: { previousMonthId: prevMonth.id },
           });
         }
       }
-    });
+    }
 
     const getTodaySales = await prisma.sale.findMany({
       where: {

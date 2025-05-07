@@ -122,20 +122,32 @@ const getMember = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             return;
         }
         const prevMonthInfo = getPrevMonthInfo(existingMember.createdAt);
-        prevMonthInfo.forEach((data) => __awaiter(void 0, void 0, void 0, function* () {
+        console.log("prevMonthInfo", prevMonthInfo);
+        for (const data of prevMonthInfo) {
             const existingPrevMonth = yield prisma.previousMonth.findFirst({
                 where: {
+                    memberId,
                     year: data.year,
                     month: data.month,
                 },
             });
             const prevMonthSales = yield prisma.sale.findMany({
                 where: {
+                    memberId,
                     year: data.year.toString(),
                     month: data.month,
                 },
             });
+            console.log("existingPrevMonth", existingPrevMonth);
+            console.log("prevMonthSales", prevMonthSales.length);
             if (!existingPrevMonth && prevMonthSales.length > 0) {
+                console.log("Previous month not exist. So Creating one.");
+                const totalSalesAmount = prevMonthSales.reduce((sum, acc) => sum + Number(acc.totalPayment), 0);
+                console.log("Total Sales Amount", totalSalesAmount);
+                console.log("Member Monthly Target", existingMember.monthlyTarget);
+                const status = totalSalesAmount < existingMember.monthlyTarget
+                    ? "Not_Achieved"
+                    : "Achieved";
                 const prevMonth = yield prisma.previousMonth.create({
                     data: {
                         memberId: existingMember.id,
@@ -143,23 +155,18 @@ const getMember = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                         month: data.month,
                         target: existingMember.monthlyTarget.toString(),
                         totalSales: existingMember.sales.length.toString(),
+                        status, // Optional: include if you want to store it
                     },
                 });
-                const salesId = existingMember.sales.map((sale) => sale.id);
-                if (salesId.length > 0) {
-                    salesId.forEach((sale) => __awaiter(void 0, void 0, void 0, function* () {
-                        yield prisma.sale.update({
-                            where: {
-                                id: sale,
-                            },
-                            data: {
-                                previousMonthId: prevMonth.id,
-                            },
-                        });
-                    }));
+                const salesId = prevMonthSales.map((sale) => sale.id);
+                for (const saleId of salesId) {
+                    yield prisma.sale.update({
+                        where: { id: saleId },
+                        data: { previousMonthId: prevMonth.id },
+                    });
                 }
             }
-        }));
+        }
         const getTodaySales = yield prisma.sale.findMany({
             where: {
                 memberId,

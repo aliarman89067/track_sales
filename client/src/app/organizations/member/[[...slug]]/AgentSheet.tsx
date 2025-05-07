@@ -79,7 +79,7 @@ const AgentSheet = ({ memberData }: AgentSheetProps) => {
       return "Achieved";
     }
   };
-  console.log(memberData);
+
   return (
     <section className="flex flex-col mt-6 gap-2 w-full mx-auto h-auto px-8">
       <h2 className="font-medium text-xl text-secondaryGray">

@@ -74,7 +74,6 @@ const addNewSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 overallSale: overallSalesAmount,
             },
         });
-        // const customDate = new Date(new Date().setMonth(new Date().getMonth() - 1));
         const response = yield prisma.sale.create({
             data: {
                 year,
