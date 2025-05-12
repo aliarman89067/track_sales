@@ -90,6 +90,8 @@ model CalendarDays {
   id              String @id @default(uuid())
   date            String
   day             Int
+  month           String
+  year            Int
   status          CALENDAR_DAYS_STATUS
   sale            String?
   leaveReason     String?
@@ -140,4 +142,6 @@ model PreviousMonth {
   status        PrevMonthStatus @default(Not_Achieved)
   // totalClient   Int
   sales         Sale[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

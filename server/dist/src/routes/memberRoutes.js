@@ -10,4 +10,6 @@ const router = express_1.default.Router();
 router.post("/", memberController_1.createMembers);
 router.get("/:memberId", (0, authMiddleware_1.authMiddleware)(["admin", "agent"]), memberController_1.getMember);
 router.post("/add-leave", memberController_1.addLeave);
+router.put("/update", (0, authMiddleware_1.authMiddleware)(["admin"]), memberController_1.updateMember);
+router.delete("/delete/:memberId", (0, authMiddleware_1.authMiddleware)(["admin"]), memberController_1.deleteMember);
 exports.default = router;

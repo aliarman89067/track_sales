@@ -82,75 +82,77 @@ const ImageInput = ({
     <FormField
       control={form.control}
       name={fieldName}
-      render={({ field }) => (
-        <FormItem>
-          {isTitle && (
-            <FormLabel className="font-medium text-secondaryGray flex items-center gap-2">
-              <span className="text-lg">{title}</span>
-              {isOptional && <span className="text-sm">(optional)</span>}
-            </FormLabel>
-          )}
-          <FormControl>
-            <label className="flex items-center gap-4 w-fit">
-              <div
-                className={cn(
-                  "rounded-full bg-gray-100 flex items-center justify-center overflow-hidden",
-                  size === "lg" ? "w-20 h-20" : "w-16 h-16"
-                )}
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="size-6 animate-spin text-secondaryGray" />
-                  </>
-                ) : (
-                  <Image
-                    src={field.value || ""}
-                    alt="Main Image"
-                    width={1000}
-                    height={1000}
-                    className="w-[80%] h-[80%] object-cover rounded-full"
-                  />
-                )}
-              </div>
-              <Input
-                ref={imageInputRef}
-                disabled={isUploading}
-                className="hidden"
-                type="file"
-                accept="image/*"
-                onChange={handleImageInputChange}
-              />
-              <div className="flex flex-col gap-1 items-center">
-                <Button
-                  type="button"
-                  disabled={isUploading}
-                  onClick={handleImageInputClick}
-                  variant="outline"
-                  className="flex flex-col items-center h-16 w-36"
-                  size={size === "lg" ? "lg" : "default"}
+      render={({ field }) => {
+        return (
+          <FormItem>
+            {isTitle && (
+              <FormLabel className="font-medium text-secondaryGray flex items-center gap-2">
+                <span className="text-lg">{title}</span>
+                {isOptional && <span className="text-sm">(optional)</span>}
+              </FormLabel>
+            )}
+            <FormControl>
+              <label className="flex items-center gap-4 w-fit">
+                <div
+                  className={cn(
+                    "rounded-full bg-gray-100 flex items-center justify-center overflow-hidden",
+                    size === "lg" ? "w-20 h-20" : "w-16 h-16"
+                  )}
                 >
                   {isUploading ? (
-                    <span>Uploading...</span>
+                    <>
+                      <Loader2 className="size-6 animate-spin text-secondaryGray" />
+                    </>
                   ) : (
-                    <span>Choose Image</span>
+                    <Image
+                      src={field.value || ""}
+                      alt="Main Image"
+                      width={1000}
+                      height={1000}
+                      className="w-[80%] h-[80%] object-cover rounded-full"
+                    />
                   )}
-                  {isOptional && !isTitle && (
-                    <FormLabel className="font-medium text-secondaryGray">
-                      <span className="text-sm">(optional)</span>
-                    </FormLabel>
-                  )}
-                </Button>
-                {/* {isOptional && isMembersState && (
+                </div>
+                <Input
+                  ref={imageInputRef}
+                  disabled={isUploading}
+                  className="hidden"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageInputChange}
+                />
+                <div className="flex flex-col gap-1 items-center">
+                  <Button
+                    type="button"
+                    disabled={isUploading}
+                    onClick={handleImageInputClick}
+                    variant="outline"
+                    className="flex flex-col items-center h-16 w-36"
+                    size={size === "lg" ? "lg" : "default"}
+                  >
+                    {isUploading ? (
+                      <span>Uploading...</span>
+                    ) : (
+                      <span>Choose Image</span>
+                    )}
+                    {isOptional && !isTitle && (
+                      <FormLabel className="font-medium text-secondaryGray">
+                        <span className="text-sm">(optional)</span>
+                      </FormLabel>
+                    )}
+                  </Button>
+                  {/* {isOptional && isMembersState && (
                   <span className="text-sm font-semibold text-secondaryGray">
                     (optional)
                   </span>
                 )} */}
-              </div>
-            </label>
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
+                </div>
+              </label>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 };

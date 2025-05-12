@@ -1,6 +1,9 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import React from "react";
+import React, { useState } from "react";
+import HistoryModal from "./HistoryModal";
 
 interface Props {
   targetCurrency: string;
@@ -17,6 +20,19 @@ interface Props {
 }
 
 const PreviousMonthsHistory = ({ prevMonthHistory, targetCurrency }: Props) => {
+  const [selectedHistory, setSelectedHistory] = useState<null | {
+    id: string;
+    memberId: string;
+    year: number;
+    month: string;
+    target: string;
+    totalSales: string;
+    status: "Not_Achieved" | "Achieved";
+    sales: Sales[];
+  }>(null);
+
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+
   return (
     <div className="flex flex-col gap-4 mt-10 px-8">
       <h1 className="font-medium text-xl text-secondaryGray">
@@ -41,64 +57,80 @@ const PreviousMonthsHistory = ({ prevMonthHistory, targetCurrency }: Props) => {
       {prevMonthHistory.length > 0 && (
         <div className="w-full gap-4 grid grid-cols-1 lg:grid-cols-2">
           {prevMonthHistory.map((history, index) => (
-            <div
-              key={index}
-              className="group rounded-lg border-2 border-secondaryGray p-4 flex items-center justify-between bg-white hover:bg-primaryGray transition-colors duration-150 ease-linear cursor-pointer"
-            >
-              <div className="flex flex-col">
-                <span className="font-semibold text-primaryGray group-hover:text-white text-lg transition-colors duration-150 ease-linear">
-                  Year
-                </span>
-                <span className="font-medium text-secondaryGray group-hover:text-gray-300 text-lg transition-colors duration-150 ease-linear">
-                  {history.year}
-                </span>
-              </div>
-              <div className="w-[1px] h-[35px] rounded-lg bg-gray-300" />
-              <div className="flex flex-col">
-                <span className="font-semibold text-primaryGray group-hover:text-white text-lg transition-colors duration-150 ease-linear">
-                  Month
-                </span>
-                <span className="font-medium text-secondaryGray group-hover:text-gray-300 text-lg transition-colors duration-150 ease-linear">
-                  {history.month}
-                </span>
-              </div>
-              <div className="w-[1px] h-[35px] rounded-lg bg-gray-300" />
-              <div className="flex flex-col">
-                <span className="font-semibold text-primaryGray  group-hover:text-white text-lg transition-colors duration-150 ease-linear">
-                  Status
-                </span>
-                <span
-                  className={cn(
-                    "font-medium text-lg transition-colors duration-150 ease-linear",
-                    history.status === "Achieved"
-                      ? "text-green-500"
-                      : "text-red-500"
-                  )}
-                >
-                  {history.status === "Achieved" ? "Achieved" : "Not Achieved"}
-                </span>
-              </div>
-              <div className="w-[1px] h-[35px] rounded-lg bg-gray-300" />
-              <div className="flex flex-col">
-                <span className="font-semibold text-primaryGray group-hover:text-white text-lg transition-colors duration-150 ease-linear">
-                  Total Sales
-                </span>
-                <span className="font-medium text-secondaryGray group-hover:text-gray-300 text-lg transition-colors duration-150 ease-linear">
-                  {history.sales.reduce(
-                    (sum, sale) => sum + Number(sale.totalPayment),
-                    0
-                  )}
-                  {targetCurrency}
-                </span>
-              </div>
-              <div className="w-[1px] h-[35px] rounded-lg bg-gray-300" />
-              <div className="flex flex-col">
-                <span className="font-semibold text-primaryGray group-hover:text-white text-lg transition-colors duration-150 ease-linear">
-                  Total Clients
-                </span>
-                <span className="font-medium text-secondaryGray group-hover:text-gray-300 text-lg transition-colors duration-150 ease-linear">
-                  {history.sales.length}
-                </span>
+            <div key={index}>
+              {selectedHistory && history.id === selectedHistory.id && (
+                <HistoryModal
+                  isOpen={isHistoryModalOpen}
+                  setIsOpen={setIsHistoryModalOpen}
+                  history={selectedHistory}
+                  targetCurrency={targetCurrency}
+                />
+              )}
+              <div
+                key={index}
+                onClick={() => {
+                  setSelectedHistory(history);
+                  setIsHistoryModalOpen(true);
+                }}
+                className="group rounded-lg border-2 border-secondaryGray p-4 flex items-center justify-between bg-white hover:bg-primaryGray transition-colors duration-150 ease-linear cursor-pointer"
+              >
+                <div className="flex flex-col">
+                  <span className="font-semibold text-primaryGray group-hover:text-white text-lg transition-colors duration-150 ease-linear">
+                    Year
+                  </span>
+                  <span className="font-medium text-secondaryGray group-hover:text-gray-300 text-lg transition-colors duration-150 ease-linear">
+                    {history.year}
+                  </span>
+                </div>
+                <div className="w-[1px] h-[35px] rounded-lg bg-gray-300" />
+                <div className="flex flex-col">
+                  <span className="font-semibold text-primaryGray group-hover:text-white text-lg transition-colors duration-150 ease-linear">
+                    Month
+                  </span>
+                  <span className="font-medium text-secondaryGray group-hover:text-gray-300 text-lg transition-colors duration-150 ease-linear">
+                    {history.month}
+                  </span>
+                </div>
+                <div className="w-[1px] h-[35px] rounded-lg bg-gray-300" />
+                <div className="flex flex-col">
+                  <span className="font-semibold text-primaryGray  group-hover:text-white text-lg transition-colors duration-150 ease-linear">
+                    Status
+                  </span>
+                  <span
+                    className={cn(
+                      "font-medium text-lg transition-colors duration-150 ease-linear",
+                      history.status === "Achieved"
+                        ? "text-green-500"
+                        : "text-red-500"
+                    )}
+                  >
+                    {history.status === "Achieved"
+                      ? "Achieved"
+                      : "Not Achieved"}
+                  </span>
+                </div>
+                <div className="w-[1px] h-[35px] rounded-lg bg-gray-300" />
+                <div className="flex flex-col">
+                  <span className="font-semibold text-primaryGray group-hover:text-white text-lg transition-colors duration-150 ease-linear">
+                    Total Sales
+                  </span>
+                  <span className="font-medium text-secondaryGray group-hover:text-gray-300 text-lg transition-colors duration-150 ease-linear">
+                    {history.sales.reduce(
+                      (sum, sale) => sum + Number(sale.totalPayment),
+                      0
+                    )}
+                    {targetCurrency}
+                  </span>
+                </div>
+                <div className="w-[1px] h-[35px] rounded-lg bg-gray-300" />
+                <div className="flex flex-col">
+                  <span className="font-semibold text-primaryGray group-hover:text-white text-lg transition-colors duration-150 ease-linear">
+                    Total Clients
+                  </span>
+                  <span className="font-medium text-secondaryGray group-hover:text-gray-300 text-lg transition-colors duration-150 ease-linear">
+                    {history.sales.length}
+                  </span>
+                </div>
               </div>
             </div>
           ))}

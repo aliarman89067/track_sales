@@ -133,3 +133,44 @@ export const AddMemberSalesSchema = z.object({
 });
 
 export type AddMemberSalesType = z.infer<typeof AddMemberSalesSchema>;
+
+export const MemberSchema = z.object({
+  id: z.string(),
+  imageUrl: z.string().default("defaultPersonImage.png").optional(),
+  name: z.string().min(1, { message: "Member name is required!" }),
+  email: z.string().min(1, { message: "Member email is required!" }),
+  phoneNumber: z.string().optional(),
+  targetCurrency: z
+    .string()
+    .min(1, { message: "Currency is required!" })
+    .default("$"),
+  salaryCurrency: z
+    .string()
+    .min(1, { message: "Currency is required!" })
+    .default("$"),
+  monthlyTarget: z
+    .string()
+    .min(1, { message: "Member Monthly Target is required!" })
+    .refine((data) => !isNaN(Number(data)), {
+      message: "Monthly target must be a number",
+    }),
+  salary: z
+    .string()
+    .min(1, { message: "Member Monthly Salary is required!" })
+    .refine((data) => !isNaN(Number(data)), {
+      message: "Monthly Salary must be a number",
+    }),
+});
+
+export type MemberType = z.infer<typeof MemberSchema>;
+
+export const updateOrganizationSchema = z.object({
+  imageUrl: z.string(),
+  organizationName: z
+    .string()
+    .min(1, { message: "Organization name is required!" }),
+  organizationKeyword: z
+    .string()
+    .min(1, { message: "Organization keyword is required!" }),
+});
+export type updateOrganizationType = z.infer<typeof updateOrganizationSchema>;

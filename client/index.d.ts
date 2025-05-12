@@ -71,6 +71,7 @@ interface MemberAddingFormProps {
   setMembers: React.Dispatch<React.SetStateAction<MembersProps[] | null>>;
   form: any;
   index: number;
+  isArray: boolean;
   removeMember: (id: number) => void;
 }
 interface OrganizationsProps {

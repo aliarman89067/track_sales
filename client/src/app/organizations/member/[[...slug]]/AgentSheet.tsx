@@ -85,7 +85,7 @@ const AgentSheet = ({ memberData }: AgentSheetProps) => {
       <h2 className="font-medium text-xl text-secondaryGray">
         Current Month History
       </h2>
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-4 lg:gap-0">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-4 lg:gap-0 h-full max-h-full">
         <div className="flex-1 flex flex-col w-full border border-secondaryGray max-lg:rounded-xl lg:rounded-tl-xl lg:rounded-bl-xl">
           {/* Left Tab bar */}
           <div className="flex items-center justify-center w-full h-20 border-b border-secondaryGray">
@@ -157,7 +157,7 @@ const AgentSheet = ({ memberData }: AgentSheetProps) => {
         </div>
         <div className="flex-1 flex flex-col w-full  border lg:border-l-transparent border-secondaryGray max-lg:rounded-xl lg:rounded-tr-xl lg:rounded-br-xl">
           {/* Right Tab bar */}
-          <div className="flex items-center justify-center w-full h-20 flex-grow shrink-0 lg:border-b border-secondaryGray">
+          <div className="flex items-center justify-center w-full max-h-20 min-h-20 flex-grow shrink-0 lg:border-b border-secondaryGray">
             <div className="flex-1 flex items-center justify-between px-6 w-full">
               <Button variant="custom" size="lg" className="rounded-lg">
                 Client Details
@@ -187,9 +187,13 @@ const AgentSheet = ({ memberData }: AgentSheetProps) => {
               </div>
             </div>
           ) : (
-            <div className="my-2 flex flex-col gap-3 w-full h-full px-6 mt-6">
+            <div className="my-2 flex flex-col gap-3 w-full px-6 mt-6 overflow-y-scroll h-[1000px]">
               {memberData.sales.map((sale, index) => (
-                <ClientRow key={index} sale={sale} memberData={memberData} />
+                <ClientRow
+                  key={index}
+                  sale={sale}
+                  targetCurrency={memberData.targetCurrency}
+                />
               ))}
             </div>
           )}

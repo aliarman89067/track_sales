@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOrganizationMembers = exports.createOrganization = exports.getOrganizationName = exports.getOrganizations = void 0;
+exports.updateOrganization = exports.getOrganizationMembers = exports.createOrganization = exports.getOrganizationName = exports.getOrganizations = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 const getOrganizations = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -110,13 +110,29 @@ const createOrganization = (req, res) => __awaiter(void 0, void 0, void 0, funct
             const createMembers = members.map((memberData) => __awaiter(void 0, void 0, void 0, function* () {
                 const { name, email, salary, monthlyTarget, phoneNumber, imageUrl, targetCurrency, salaryCurrency, } = memberData;
                 // Create Calendars Data
-                const todayData = new Date(new Date().setMonth(new Date().getMonth() - 3));
+                const todayData = new Date();
                 const year = todayData.getFullYear();
                 const month = todayData.getMonth();
                 const totalDays = new Date(year, month + 1, 0).getDate();
+                const monthNames = [
+                    "January",
+                    "February",
+                    "March",
+                    "April",
+                    "May",
+                    "June",
+                    "July",
+                    "August",
+                    "September",
+                    "October",
+                    "November",
+                    "December",
+                ];
                 const dateResult = [];
-                for (let day = 1; day < totalDays; day++) {
+                for (let day = 1; day <= totalDays; day++) {
                     const currentDate = new Date(year, month, day);
+                    const monthName = monthNames[month];
+                    const yearName = year;
                     const dayName = currentDate.toLocaleDateString("en-us", {
                         weekday: "short",
                     });
@@ -125,6 +141,8 @@ const createOrganization = (req, res) => __awaiter(void 0, void 0, void 0, funct
                         date: currentDate.toISOString().split("T")[0],
                         day,
                         status: dayName.toLowerCase() === "sun" ? "HOLIDAY" : status,
+                        month: monthName,
+                        year: yearName,
                     });
                 }
                 const member = yield prisma.member.create({
@@ -152,6 +170,8 @@ const createOrganization = (req, res) => __awaiter(void 0, void 0, void 0, funct
                             date: date.date,
                             status: date.status,
                             memberId: member.id,
+                            month: date.month,
+                            year: date.year,
                         },
                     });
                 }));
@@ -169,7 +189,6 @@ exports.createOrganization = createOrganization;
 const getOrganizationMembers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const { organizationId, adminCognitoId } = req.params;
-    console.log(organizationId, adminCognitoId);
     try {
         const organization = yield prisma.organization.findUnique({
             where: {
@@ -198,3 +217,36 @@ const getOrganizationMembers = (req, res) => __awaiter(void 0, void 0, void 0, f
     }
 });
 exports.getOrganizationMembers = getOrganizationMembers;
+const updateOrganization = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const { adminCognitoId, organizationId, imageUrl, organizationName, organizationKeyword, } = req.body;
+    try {
+        if (!adminCognitoId ||
+            !organizationId ||
+            !imageUrl ||
+            !organizationName ||
+            !organizationKeyword) {
+            res.status(404).json({ message: "Payload is not correct!" });
+            return;
+        }
+        yield prisma.organization.update({
+            where: {
+                id: organizationId,
+                adminCognitoId,
+            },
+            data: {
+                imageUrl,
+                organizationName,
+                organizationKeyword,
+            },
+        });
+        res.status(200).json({ message: "Organization updated successfully." });
+    }
+    catch (error) {
+        console.log("Failed to update organization", error);
+        res.status(500).json({
+            message: `Failed to update organization ${(_a = error.message) !== null && _a !== void 0 ? _a : ""}`,
+        });
+    }
+});
+exports.updateOrganization = updateOrganization;

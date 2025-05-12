@@ -77,14 +77,34 @@ export const createMembers = async (
       const month = todayData.getMonth();
       const totalDays = new Date(year, month + 1, 0).getDate();
 
+      const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+
       const dateResult: {
         date: string;
         day: number;
         status: "SALE" | "NOT_SALE" | "LEAVE" | "HOLIDAY" | "REMAINING_DAY";
+        month: string;
+        year: number;
       }[] = [];
 
       for (let day = 1; day <= totalDays; day++) {
         const currentDate = new Date(year, month, day);
+
+        const monthName = monthNames[month];
+        const yearName = year;
 
         const dayName = currentDate.toLocaleDateString("en-us", {
           weekday: "short",
@@ -101,12 +121,14 @@ export const createMembers = async (
           date: currentDate.toISOString().split("T")[0],
           day,
           status: dayName.toLocaleLowerCase() === "sun" ? "HOLIDAY" : status,
+          month: monthName,
+          year: yearName,
         });
       }
 
-      const customDate = new Date(
-        new Date().setMonth(new Date().getMonth() - 3)
-      );
+      // const customDate = new Date(
+      //   new Date().setMonth(new Date().getMonth() - 3)
+      // );
 
       const member = await prisma.member.create({
         data: {
@@ -123,10 +145,9 @@ export const createMembers = async (
           targetCurrency,
           salaryCurrency,
           keyword: checkOrganization.organizationKeyword,
-          createdAt: customDate,
+          createdAt: new Date(),
         },
       });
-      console.log("Member created");
       dateResult.map(async (date) => {
         await prisma.calendarDays.create({
           data: {
@@ -134,6 +155,8 @@ export const createMembers = async (
             date: date.date,
             status: date.status,
             memberId: member.id,
+            month: date.month,
+            year: date.year,
           },
         });
       });
@@ -175,9 +198,86 @@ export const getMember = async (req: GetMemberRequest, res: Response) => {
       return;
     }
 
-    const prevMonthInfo = getPrevMonthInfo(existingMember.createdAt);
+    // Checking is CalendarDays exist is not create them
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+    const yearName = date.getFullYear();
+    const monthName = monthNames[date.getMonth()];
+    const getCalendarDays = await prisma.calendarDays.findMany({
+      where: {
+        memberId,
+        year: yearName,
+        month: monthName,
+      },
+    });
+    if (getCalendarDays.length < 1) {
+      console.log("Calendar days not exist. So Creating them");
+      const totalDays = new Date(
+        date.getFullYear(),
+        date.getMonth() + 1,
+        0
+      ).getDate();
 
-    console.log("prevMonthInfo", prevMonthInfo);
+      console.log("totalDays", totalDays);
+
+      const dateResult: {
+        date: string;
+        day: number;
+        status: "SALE" | "NOT_SALE" | "LEAVE" | "HOLIDAY" | "REMAINING_DAY";
+        month: string;
+        year: number;
+      }[] = [];
+
+      for (let day = 1; day <= totalDays; day++) {
+        const currentDate = new Date(date.getFullYear(), date.getMonth(), day);
+
+        const dayName = currentDate.toLocaleDateString("en-us", {
+          weekday: "short",
+        });
+
+        const status:
+          | "SALE"
+          | "NOT_SALE"
+          | "LEAVE"
+          | "HOLIDAY"
+          | "REMAINING_DAY" = currentDate < date ? "NOT_SALE" : "REMAINING_DAY";
+        dateResult.push({
+          date: currentDate.toISOString().split("T")[0],
+          day,
+          status: dayName.toLowerCase() === "sun" ? "HOLIDAY" : status,
+          month: monthName,
+          year: yearName,
+        });
+      }
+      dateResult.map(async (date) => {
+        await prisma.calendarDays.create({
+          data: {
+            day: date.day,
+            date: date.date,
+            status: date.status,
+            memberId,
+            month: date.month,
+            year: date.year,
+          },
+        });
+      });
+    } else {
+      console.log("Calendar days exist.");
+    }
+
+    const prevMonthInfo = getPrevMonthInfo(existingMember.createdAt);
 
     for (const data of prevMonthInfo) {
       const existingPrevMonth = await prisma.previousMonth.findFirst({
@@ -195,9 +295,6 @@ export const getMember = async (req: GetMemberRequest, res: Response) => {
           month: data.month,
         },
       });
-
-      console.log("existingPrevMonth", existingPrevMonth);
-      console.log("prevMonthSales", prevMonthSales.length);
 
       if (!existingPrevMonth && prevMonthSales.length > 0) {
         console.log("Previous month not exist. So Creating one.");
@@ -244,6 +341,7 @@ export const getMember = async (req: GetMemberRequest, res: Response) => {
       },
     });
     let todaySale = 0;
+
     getTodaySales.forEach((sale) => {
       todaySale += Number(sale.totalPayment);
     });
@@ -256,6 +354,10 @@ export const getMember = async (req: GetMemberRequest, res: Response) => {
       },
       include: {
         calendarDays: {
+          where: {
+            month: monthName,
+            year: yearName,
+          },
           orderBy: {
             day: "asc",
           },
@@ -354,5 +456,72 @@ export const addLeave = async (req: AddLeaveRequest, res: Response) => {
     res
       .status(500)
       .json({ message: `Failed to add leave ${error.message ?? error}` });
+  }
+};
+
+export const updateMember = async (req: Request, res: Response) => {
+  const {
+    id,
+    name,
+    email,
+    imageUrl,
+    monthlyTarget,
+    phoneNumber,
+    salary,
+    targetCurrency,
+    salaryCurrency,
+  } = req.body;
+  try {
+    if (
+      !id ||
+      !name ||
+      !email ||
+      !imageUrl ||
+      !monthlyTarget ||
+      !salary ||
+      !targetCurrency ||
+      !salaryCurrency
+    ) {
+      res.status(404).json({ message: "Payload request is not correct!" });
+      return;
+    }
+    const updatedMember = await prisma.member.update({
+      where: {
+        id,
+      },
+      data: {
+        name,
+        email,
+        imageUrl,
+        monthlyTarget: Number(monthlyTarget),
+        phoneNumber,
+        salary: Number(salary),
+        targetCurrency,
+        salaryCurrency,
+      },
+    });
+    res.status(201).json(updatedMember);
+  } catch (error: any) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ message: `Failed to update member ${error.message ?? error}` });
+  }
+};
+
+export const deleteMember = async (req: Request, res: Response) => {
+  const { memberId } = req.params;
+  try {
+    await prisma.member.delete({
+      where: {
+        id: memberId,
+      },
+    });
+    res.status(200).json({ message: "Member Deleted Successfully" });
+  } catch (error: any) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ message: `Failed to delete member ${error.message ?? error}` });
   }
 };

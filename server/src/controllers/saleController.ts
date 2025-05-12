@@ -28,7 +28,7 @@ export const addNewSale = async (req: Request, res: Response) => {
       return;
     }
 
-    const date = new Date(new Date().setMonth(new Date().getMonth() - 3));
+    const date = new Date();
 
     const monthNames = [
       "January",

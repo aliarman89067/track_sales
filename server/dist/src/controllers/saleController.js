@@ -24,7 +24,7 @@ const addNewSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             res.status(404).json({ message: "Request payload is not correct!" });
             return;
         }
-        const date = new Date(new Date().setMonth(new Date().getMonth() - 3));
+        const date = new Date();
         const monthNames = [
             "January",
             "February",

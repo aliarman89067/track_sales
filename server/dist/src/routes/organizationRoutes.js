@@ -9,6 +9,6 @@ const router = express_1.default.Router();
 router.get("/:adminCognitoId", organizationController_1.getOrganizations);
 router.get("/:organizationId/:adminCognitoId", organizationController_1.getOrganizationName);
 router.post("/", organizationController_1.createOrganization);
-router.put("/:adminCognitoId", (req, res) => { });
 router.get("/members/:organizationId/:adminCognitoId", organizationController_1.getOrganizationMembers);
+router.post("/update", organizationController_1.updateOrganization);
 exports.default = router;

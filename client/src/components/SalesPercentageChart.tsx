@@ -24,7 +24,7 @@ const SalesPercentageChart = ({
 }: SalesPercentageChartProps) => {
   const [percentange, setPercentage] = useState(0);
   useEffect(() => {
-    const per = (currentSale / monthlyTarget) * 100;
+    const per = Math.round((currentSale / monthlyTarget) * 100);
     setPercentage(per);
   }, [currentSale, monthlyTarget]);
 

@@ -221,6 +221,7 @@ const OrganizationCreate = () => {
                       setMembers={setMembers}
                       form={form}
                       removeMember={removeMember}
+                      isArray
                     />
                   ))}
               </>

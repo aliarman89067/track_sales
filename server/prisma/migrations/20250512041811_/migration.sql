@@ -4,6 +4,9 @@ CREATE TYPE "USER_ROLE" AS ENUM ('admin', 'agent');
 -- CreateEnum
 CREATE TYPE "CALENDAR_DAYS_STATUS" AS ENUM ('SALE', 'NOT_SALE', 'LEAVE', 'HOLIDAY', 'REMAINING_DAY');
 
+-- CreateEnum
+CREATE TYPE "PrevMonthStatus" AS ENUM ('Not_Achieved', 'Achieved');
+
 -- CreateTable
 CREATE TABLE "Admin" (
     "id" TEXT NOT NULL,
@@ -75,6 +78,8 @@ CREATE TABLE "CalendarDays" (
     "id" TEXT NOT NULL,
     "date" TEXT NOT NULL,
     "day" INTEGER NOT NULL,
+    "month" TEXT NOT NULL,
+    "year" INTEGER NOT NULL,
     "status" "CALENDAR_DAYS_STATUS" NOT NULL,
     "sale" TEXT,
     "leaveReason" TEXT,
@@ -113,7 +118,7 @@ CREATE TABLE "Sale" (
     "memberId" TEXT NOT NULL,
     "previousMonthId" TEXT,
     "createDate" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TEXT NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Sale_pkey" PRIMARY KEY ("id")
@@ -122,12 +127,14 @@ CREATE TABLE "Sale" (
 -- CreateTable
 CREATE TABLE "PreviousMonth" (
     "id" TEXT NOT NULL,
-    "year" TEXT NOT NULL,
+    "memberId" TEXT,
+    "year" INTEGER NOT NULL,
     "month" TEXT NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL,
     "target" TEXT NOT NULL,
     "totalSales" TEXT NOT NULL,
-    "totalClient" INTEGER NOT NULL,
+    "status" "PrevMonthStatus" NOT NULL DEFAULT 'Not_Achieved',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "PreviousMonth_pkey" PRIMARY KEY ("id")
 );
@@ -164,3 +171,6 @@ ALTER TABLE "Sale" ADD CONSTRAINT "Sale_memberId_fkey" FOREIGN KEY ("memberId") 
 
 -- AddForeignKey
 ALTER TABLE "Sale" ADD CONSTRAINT "Sale_previousMonthId_fkey" FOREIGN KEY ("previousMonthId") REFERENCES "PreviousMonth"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PreviousMonth" ADD CONSTRAINT "PreviousMonth_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE SET NULL ON UPDATE CASCADE;

@@ -213,6 +213,7 @@ const AddMemberPage = ({ organizationId }: { organizationId: string }) => {
                         member={member}
                         setMembers={setMembers}
                         removeMember={removeMember}
+                        isArray
                       />
                     ))}
                 </div>

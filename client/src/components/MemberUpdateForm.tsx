@@ -1,77 +1,51 @@
-import React, { useEffect } from "react";
 import ImageInput from "./inputs/ImageInput";
-import { Button } from "./ui/button";
 import TextInput from "./inputs/TextInput";
 
-const MemberAddingForm = ({
-  form,
-  member,
-  setMembers,
-  index,
-  removeMember,
-  isArray,
-}: MemberAddingFormProps) => {
+interface Props {
+  isArray: boolean;
+  index: number;
+  form: any;
+}
+
+export const MemberUpdateForm = ({ isArray, index, form }: Props) => {
   return (
     <div className="w-full h-fit px-5 py-4 border border-gray-400 rounded-lg">
       <div className="flex flex-col space-y-3">
-        <div className="flex justify-between">
-          <ImageInput
-            isTitle={false}
-            fieldName={isArray ? `members.${index}.imageUrl` : "imageUrl"}
-            form={form}
-            size="sm"
-            index={index}
-            isMembersState
-            setMembers={setMembers}
-            isOptional
-            memberId={member.id}
-          />
-          <Button
-            type="button"
-            onClick={() => removeMember(member.id)}
-            variant="destructive"
-            size="sm"
-            className="bg-rose-400 hover:bg-rose-500 rounded-lg"
-          >
-            Remove -
-          </Button>
-        </div>
+        <ImageInput
+          isTitle={false}
+          fieldName={isArray ? `members.${index}.imageUrl` : "imageUrl"}
+          form={form}
+          size="sm"
+          index={index}
+          isMembersState
+          isOptional
+        />
         <TextInput
           isTitle
           title="Member name"
           form={form}
           placeHolder="Enter member name"
           fieldName={isArray ? `members.${index}.name` : "name"}
-          isMembersState
-          setMembers={setMembers}
           index={index}
           size="sm"
-          memberId={member.id}
         />
         <TextInput
           isTitle
           title="Member email"
           form={form}
-          placeHolder="Enter member email"
+          placeHolder="Enter member name"
           fieldName={isArray ? `members.${index}.email` : "email"}
-          isMembersState
-          setMembers={setMembers}
           index={index}
           size="sm"
-          memberId={member.id}
         />
         <TextInput
           isTitle
           title="Member phone number"
           form={form}
-          isOptional
           placeHolder="Enter member phone number"
           fieldName={isArray ? `members.${index}.phoneNumber` : "phoneNumber"}
-          isMembersState
-          setMembers={setMembers}
           index={index}
           size="sm"
-          memberId={member.id}
         />
         <div className="flex items-center gap-2">
           <div className="flex-1">
@@ -83,11 +57,8 @@ const MemberAddingForm = ({
               fieldName={
                 isArray ? `members.${index}.monthlyTarget` : "monthlyTarget"
               }
-              isMembersState
-              setMembers={setMembers}
               index={index}
               size="sm"
-              memberId={member.id}
             />
           </div>
           <div className="max-w-[80px]">
@@ -99,11 +70,8 @@ const MemberAddingForm = ({
               fieldName={
                 isArray ? `members.${index}.targetCurrency` : "targetCurrency"
               }
-              isMembersState
-              setMembers={setMembers}
               index={index}
               size="sm"
-              memberId={member.id}
             />
           </div>
         </div>
@@ -115,11 +83,8 @@ const MemberAddingForm = ({
               form={form}
               placeHolder="Enter member monthly salary"
               fieldName={isArray ? `members.${index}.salary` : "salary"}
-              isMembersState
-              setMembers={setMembers}
               index={index}
               size="sm"
-              memberId={member.id}
             />
           </div>
           <div className="max-w-[80px]">
@@ -131,11 +96,8 @@ const MemberAddingForm = ({
               fieldName={
                 isArray ? `members.${index}.salaryCurrency` : "salaryCurrency"
               }
-              isMembersState
-              setMembers={setMembers}
               index={index}
               size="sm"
-              memberId={member.id}
             />
           </div>
         </div>
@@ -143,5 +105,3 @@ const MemberAddingForm = ({
     </div>
   );
 };
-
-export default MemberAddingForm;

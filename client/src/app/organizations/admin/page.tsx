@@ -1,12 +1,20 @@
 "use client";
 import { EmptyPaperPlaneCTA } from "@/components/EmptyPaperPlaneCTA";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { openAlertDialog } from "@/state";
 import {
   useGetAuthUserQuery,
   useGetMemberOrganizationQuery,
 } from "@/state/api";
-import { ArrowRight, Loader2, Plus } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/state/redux";
+import { ArrowRight, EllipsisVertical, Loader2, Plus } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
@@ -132,18 +140,42 @@ const AdminOrganizations = () => {
                         {membersLength(organization)} peoples added
                       </span>
                     </div>
-                    <div
-                      onClick={() =>
-                        router.push(
-                          `/organizations/member/add/${organization.id}`
-                        )
-                      }
-                      className="group px-5 h-11 rounded-full border-2 border-brand-500 bg-white flex items-center justify-center cursor-pointer hover:bg-brand-500 transition-all duration-200 ease-in-out"
-                    >
-                      <span className="text-brand-500 text-sm flex items-center gap-1 group-hover:text-white transition-all duration-200 ease-in-out">
-                        <Plus className="size-4" />
-                        Add Member
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <div
+                        onClick={() =>
+                          router.push(
+                            `/organizations/member/add/${organization.id}`
+                          )
+                        }
+                        className="group px-5 h-11 rounded-full border-2 border-brand-500 bg-white flex items-center justify-center cursor-pointer hover:bg-brand-500 transition-all duration-200 ease-in-out"
+                      >
+                        <span className="text-brand-500 text-sm flex items-center gap-1 group-hover:text-white transition-all duration-200 ease-in-out">
+                          <Plus className="size-4" />
+                          Add Member
+                        </span>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="group border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-200 w-7 h-9 rounded-xl flex items-center justify-center transition-all duration-150 ease-linear">
+                            <EllipsisVertical className="size-5 group-hover:text-secondaryGray text-secondaryGray/80" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              router.push(
+                                `/organizations/update/${organization.id}`
+                              )
+                            }
+                            className="bg-brand-400 hover:bg-brand-500 focus:bg-brand-500 focus:text-white text-white transition-all duration-150 ease-linear"
+                          >
+                            Update Organization
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="bg-red-400 hover:bg-red-500 focus:bg-red-500 focus:text-white text-white transition-all duration-150 ease-linear">
+                            Delete Organization
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                   <div className="flex items-center flex-col gap-2 w-full mt-5">
@@ -178,17 +210,48 @@ export default AdminOrganizations;
 
 const MemberRow = ({ organization }: { organization: OrganizationsProps }) => {
   const router = useRouter();
+  const [org, setOrg] = useState(organization);
+  const { isMemberRemoved, memberId } = useAppSelector((state) => state.global);
+  const dispatch = useAppDispatch();
+
+  const handleDeleteMember = (memberId: string) => {
+    dispatch(
+      openAlertDialog({
+        openValue: true,
+        isRemoved: false,
+        memberId,
+      })
+    );
+  };
+
+  useEffect(() => {
+    if (isMemberRemoved) {
+      setOrg((prev) => {
+        if (!prev || !prev.members || prev.members.length < 1) return prev;
+        return {
+          ...prev,
+          members: prev.members.filter((member) => member.id !== memberId),
+        };
+      });
+      dispatch(
+        openAlertDialog({
+          openValue: false,
+          isRemoved: false,
+          memberId: "",
+        })
+      );
+    }
+  }, [isMemberRemoved]);
+
   return (
     <>
-      {organization.members &&
-        organization.members.length > 0 &&
-        organization.members.slice(0, 3).map((member) => (
+      {org.members &&
+        org.members.length > 0 &&
+        org.members.slice(0, 3).map((member) => (
           <div
             key={member.id}
             onClick={() =>
-              router.push(
-                `/organizations/member/${member.id}/${organization.id}`
-              )
+              router.push(`/organizations/member/${member.id}/${org.id}`)
             }
             className="border border-gray-300 hover:border-gray-400 cursor-pointer px-3 py-2 rounded-lg w-full hover:w-[102%] transition-all duration-200 ease-in-out"
           >
@@ -212,24 +275,50 @@ const MemberRow = ({ organization }: { organization: OrganizationsProps }) => {
                   </span>
                   <div className="bg-white border border-gray-300 px-3 py-1 rounded-full flex items-center justify-center mt-1">
                     <span className="text-secondaryGray text-sm font-light">
-                      {organization.organizationKeyword} Sale Agent
+                      {org.organizationKeyword} Sale Agent
                     </span>
                   </div>
                 </div>
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  router.push(
-                    `/agent/add/data/${member.id}/${organization.id}`
-                  );
-                }}
-                className="group bg-brand-500 px-5 h-fit rounded-full py-1 hover:bg-white cursor-pointer border hover:border-gray-200 transition-all duration-200 ease-in-out"
-              >
-                <span className="text-white group-hover:text-brand-500 text-sm">
-                  Enter data
-                </span>
-              </button>
+              <div className="flex flex-col justify-between items-end">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="group border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-200 w-7 h-7 rounded-md flex items-center justify-center transition-all duration-150 ease-linear">
+                      <EllipsisVertical className="size-5 group-hover:text-secondaryGray text-secondaryGray/80" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        router.push(`/organizations/member/update/${member.id}`)
+                      }
+                      className="bg-brand-400 hover:bg-brand-500 focus:bg-brand-500 focus:text-white text-white transition-all duration-150 ease-linear"
+                    >
+                      Update Member
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteMember(member.id);
+                      }}
+                      className="bg-red-400 hover:bg-red-500 focus:bg-red-500 focus:text-white text-white transition-all duration-150 ease-linear"
+                    >
+                      Delete Member
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/agent/add/data/${member.id}/${org.id}`);
+                  }}
+                  className="group bg-brand-500 px-5 h-fit rounded-full py-1 hover:bg-white cursor-pointer border hover:border-gray-200 transition-all duration-200 ease-in-out"
+                >
+                  <span className="text-white group-hover:text-brand-500 text-sm">
+                    Enter data
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         ))}

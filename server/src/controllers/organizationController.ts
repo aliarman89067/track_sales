@@ -166,21 +166,39 @@ export const createOrganization = async (
           salaryCurrency,
         } = memberData;
         // Create Calendars Data
-        const todayData = new Date(
-          new Date().setMonth(new Date().getMonth() - 3)
-        );
+        const todayData = new Date();
         const year = todayData.getFullYear();
         const month = todayData.getMonth();
         const totalDays = new Date(year, month + 1, 0).getDate();
+
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
 
         const dateResult: {
           date: string;
           day: number;
           status: "SALE" | "NOT_SALE" | "LEAVE" | "HOLIDAY" | "REMAINING_DAY";
+          month: string;
+          year: number;
         }[] = [];
 
-        for (let day = 1; day < totalDays; day++) {
+        for (let day = 1; day <= totalDays; day++) {
           const currentDate = new Date(year, month, day);
+
+          const monthName = monthNames[month];
+          const yearName = year;
 
           const dayName = currentDate.toLocaleDateString("en-us", {
             weekday: "short",
@@ -197,6 +215,8 @@ export const createOrganization = async (
             date: currentDate.toISOString().split("T")[0],
             day,
             status: dayName.toLowerCase() === "sun" ? "HOLIDAY" : status,
+            month: monthName,
+            year: yearName,
           });
         }
 
@@ -225,6 +245,8 @@ export const createOrganization = async (
               date: date.date,
               status: date.status,
               memberId: member.id,
+              month: date.month,
+              year: date.year,
             },
           });
         });
@@ -251,7 +273,6 @@ export const getOrganizationMembers = async (
 ) => {
   const { organizationId, adminCognitoId } = req.params;
 
-  console.log(organizationId, adminCognitoId);
   try {
     const organization = await prisma.organization.findUnique({
       where: {
@@ -275,6 +296,45 @@ export const getOrganizationMembers = async (
     console.log("Failed to get organization member", error);
     res.status(500).json({
       message: `Failed to get organization members ${error.message ?? ""}`,
+    });
+  }
+};
+
+export const updateOrganization = async (req: Request, res: Response) => {
+  const {
+    adminCognitoId,
+    organizationId,
+    imageUrl,
+    organizationName,
+    organizationKeyword,
+  } = req.body;
+  try {
+    if (
+      !adminCognitoId ||
+      !organizationId ||
+      !imageUrl ||
+      !organizationName ||
+      !organizationKeyword
+    ) {
+      res.status(404).json({ message: "Payload is not correct!" });
+      return;
+    }
+    await prisma.organization.update({
+      where: {
+        id: organizationId,
+        adminCognitoId,
+      },
+      data: {
+        imageUrl,
+        organizationName,
+        organizationKeyword,
+      },
+    });
+    res.status(200).json({ message: "Organization updated successfully." });
+  } catch (error: any) {
+    console.log("Failed to update organization", error);
+    res.status(500).json({
+      message: `Failed to update organization ${error.message ?? ""}`,
     });
   }
 };

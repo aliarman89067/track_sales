@@ -2,6 +2,8 @@ import {
   AddMemberSalesType,
   CreateOrganizationFormType,
   MembersType,
+  MemberType,
+  updateOrganizationType,
 } from "@/lib/types";
 import { createNewUser, getNameByRole } from "@/lib/utils";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
@@ -200,6 +202,35 @@ export const api = createApi({
         };
       },
     }),
+    updateMember: build.mutation<MemberType, Partial<MemberType>>({
+      query: (args) => ({
+        url: "/members/update",
+        method: "PUT",
+        body: args,
+      }),
+      invalidatesTags: (result) => [{ type: "Agent" }],
+    }),
+    deleteMember: build.mutation<any, { memberId: string }>({
+      query: ({ memberId }) => ({
+        url: `/members/delete/${memberId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result) => [{ type: "Agent" }],
+    }),
+    updateOrganization: build.mutation<
+      any,
+      updateOrganizationType & {
+        organizationId: string;
+        adminCognitoId: string;
+      }
+    >({
+      query: (args) => ({
+        url: "/organizations/update",
+        method: "POST",
+        body: args,
+      }),
+      invalidatesTags: () => [{ type: "Agent" }, { type: "Admin" }],
+    }),
   }),
 });
 
@@ -213,4 +244,7 @@ export const {
   useGetMemberQuery,
   useAddAgentSaleMutation,
   useAddLeaveMutation,
+  useUpdateMemberMutation,
+  useDeleteMemberMutation,
+  useUpdateOrganizationMutation,
 } = api;

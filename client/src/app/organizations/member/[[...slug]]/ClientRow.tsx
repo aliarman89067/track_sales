@@ -11,10 +11,10 @@ import {
 
 interface props {
   sale: Sales;
-  memberData: AgentSheetProps["memberData"];
+  targetCurrency: string;
 }
 
-export const ClientRow = ({ sale, memberData }: props) => {
+export const ClientRow = ({ sale, targetCurrency }: props) => {
   return (
     <div className="flex items-center justify-between rounded-lg border border-secondaryGray bg-white hover:bg-gray-200 transition-colors duration-150 ease-linear">
       {/* Client Image */}
@@ -56,13 +56,15 @@ export const ClientRow = ({ sale, memberData }: props) => {
       {/* Client Amount */}
       <div className="flex flex-col h-full w-full justify-center border-l border-secondaryGray text-center">
         <div className="text-center flex items-center justify-center h-full px-4">
-          <span className="font-semibold text-base text-primaryGray">Date</span>
+          <span className="font-semibold text-base text-primaryGray">
+            Amount
+          </span>
         </div>
         <div className="h-[1px] w-full bg-secondaryGray" />
         <div className="text-center flex items-center justify-center h-full px-4">
           <span className="font-medium text-base text-secondaryGray">
             {sale.totalPayment}
-            {memberData.targetCurrency}
+            {targetCurrency}
           </span>
         </div>
       </div>
@@ -106,7 +108,7 @@ export const ClientRow = ({ sale, memberData }: props) => {
                 </span>
                 <span className="font-medium text-lg text-secondaryGray">
                   {sale.totalPayment}
-                  {memberData.targetCurrency}
+                  {targetCurrency}
                 </span>
               </div>
               <div className="flex flex-col gap-0.5 items-center">
@@ -115,7 +117,7 @@ export const ClientRow = ({ sale, memberData }: props) => {
                 </span>
                 <span className="font-medium text-lg text-secondaryGray">
                   {sale.paidAmount}
-                  {memberData.targetCurrency}
+                  {targetCurrency}
                 </span>
               </div>
               <div className="flex flex-col gap-0.5 items-center">
@@ -124,7 +126,7 @@ export const ClientRow = ({ sale, memberData }: props) => {
                 </span>
                 <span className="font-medium text-lg text-secondaryGray">
                   {sale.remainingAmount}
-                  {memberData.targetCurrency}
+                  {targetCurrency}
                 </span>
               </div>
             </div>
