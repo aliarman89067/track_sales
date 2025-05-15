@@ -338,3 +338,36 @@ export const updateOrganization = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getOrganizationsWithMembers = async (
+  req: Request,
+  res: Response
+) => {
+  const { adminCognitoId } = req.params;
+  try {
+    const organizations = await prisma.organization.findMany({
+      where: {
+        adminCognitoId,
+      },
+      include: {
+        sales: true,
+        members: {
+          orderBy: {
+            createdAt: "desc",
+          },
+          include: {
+            calendarDays: true,
+            sales: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+    res.status(200).json(organizations);
+  } catch (error) {
+    console.log("Failed to fetch organizations ", error);
+    res.status(400).json({ message: "Failed to fetch oraganizations" });
+  }
+};

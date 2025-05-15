@@ -1,9 +1,31 @@
+"use client";
 import { Navbar } from "@/components/Navbar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { NAVBAR_HEIGHT } from "@/constant/values";
-import React, { PropsWithChildren } from "react";
+import { useGetAuthUserQuery } from "@/state/api";
+import { usePathname, useRouter } from "next/navigation";
+import React, { PropsWithChildren, useEffect } from "react";
 
 const DashboardLayout = ({ children }: PropsWithChildren) => {
+  const {
+    data: authData,
+    isLoading: isAuthLoading,
+    isError,
+  } = useGetAuthUserQuery();
+
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (pathname === "/dashboard") {
+      if (authData?.cognitoId && authData?.role === "admin") {
+        router.push("/dashboard/admin");
+      } else if (authData?.cognitoId && authData?.role === "agent") {
+        router.push("/");
+      }
+    }
+  }, [authData, isAuthLoading, isError, pathname]);
+
   return (
     <SidebarProvider defaultOpen={false}>
       <main className="flex flex-col w-full">

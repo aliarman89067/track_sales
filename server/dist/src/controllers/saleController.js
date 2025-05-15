@@ -99,6 +99,7 @@ const addNewSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             },
             data: {
                 status: "SALE",
+                sale: response.totalPayment,
             },
         });
         res.status(201).json(response);

@@ -2,6 +2,7 @@ import React from "react";
 import { Header } from "./Header";
 import { DetailsSection } from "./DetailsSection";
 import AgentHistoryPanel from "./AgentHistoryPanel";
+import Footer from "./Footer";
 
 const LandingPage = () => {
   return (
@@ -9,6 +10,7 @@ const LandingPage = () => {
       <Header />
       <DetailsSection />
       <AgentHistoryPanel />
+      <Footer />
     </section>
   );
 };

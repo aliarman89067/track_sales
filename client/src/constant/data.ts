@@ -40,3 +40,16 @@ export const NAVBAR_LINKS = [
     href: "/dashboard",
   },
 ];
+
+export const FOOTER_FEATURES = [
+  {
+    id: 1,
+    label: "Add Agent",
+    href: "/agent",
+  },
+  {
+    id: 2,
+    label: "Create Organization",
+    href: "/organizations/create",
+  },
+];

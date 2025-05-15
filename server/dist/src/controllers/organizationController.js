@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateOrganization = exports.getOrganizationMembers = exports.createOrganization = exports.getOrganizationName = exports.getOrganizations = void 0;
+exports.getOrganizationsWithMembers = exports.updateOrganization = exports.getOrganizationMembers = exports.createOrganization = exports.getOrganizationName = exports.getOrganizations = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 const getOrganizations = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -250,3 +250,34 @@ const updateOrganization = (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.updateOrganization = updateOrganization;
+const getOrganizationsWithMembers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { adminCognitoId } = req.params;
+    try {
+        const organizations = yield prisma.organization.findMany({
+            where: {
+                adminCognitoId,
+            },
+            include: {
+                sales: true,
+                members: {
+                    orderBy: {
+                        createdAt: "desc",
+                    },
+                    include: {
+                        calendarDays: true,
+                        sales: true,
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+        res.status(200).json(organizations);
+    }
+    catch (error) {
+        console.log("Failed to fetch organizations ", error);
+        res.status(400).json({ message: "Failed to fetch oraganizations" });
+    }
+});
+exports.getOrganizationsWithMembers = getOrganizationsWithMembers;

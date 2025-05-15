@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 const organizationController_1 = require("../controllers/organizationController");
 const router = express_1.default.Router();
 router.get("/:adminCognitoId", organizationController_1.getOrganizations);
+router.get("/members/:adminCognitoId", organizationController_1.getOrganizationsWithMembers);
 router.get("/:organizationId/:adminCognitoId", organizationController_1.getOrganizationName);
 router.post("/", organizationController_1.createOrganization);
 router.get("/members/:organizationId/:adminCognitoId", organizationController_1.getOrganizationMembers);

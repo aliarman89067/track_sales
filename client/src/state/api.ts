@@ -231,6 +231,15 @@ export const api = createApi({
       }),
       invalidatesTags: () => [{ type: "Agent" }, { type: "Admin" }],
     }),
+    getMembersOrganization: build.query<
+      OrganizationsWithMembersProps[],
+      { adminCognitoId?: string }
+    >({
+      query: ({ adminCognitoId }) => ({
+        url: `/organizations/members/${adminCognitoId}`,
+      }),
+      providesTags: (result) => [{ type: "Admin" }, { type: "Agent" }],
+    }),
   }),
 });
 
@@ -247,4 +256,5 @@ export const {
   useUpdateMemberMutation,
   useDeleteMemberMutation,
   useUpdateOrganizationMutation,
+  useGetMembersOrganizationQuery,
 } = api;

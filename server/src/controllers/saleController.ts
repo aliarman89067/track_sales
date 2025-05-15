@@ -110,6 +110,7 @@ export const addNewSale = async (req: Request, res: Response) => {
       },
       data: {
         status: "SALE",
+        sale: response.totalPayment,
       },
     });
     res.status(201).json(response);

@@ -292,7 +292,7 @@ const AgentHistoryPanel = () => {
   ];
 
   return (
-    <section className="w-full bg-primaryGray flex flex-col items-center gap-6 justify-center py-20">
+    <section className="w-full bg-primaryGray flex flex-col items-center gap-6 justify-center py-20 max-sm:px-3">
       <h1 className="text-center font-bold text-3xl text-white font-jacquesFrancois">
         Check Out Your Agent History in a Sleek Design
       </h1>

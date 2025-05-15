@@ -168,6 +168,7 @@ interface CalendarDaysProps {
 interface SalesPercentageChartProps {
   currentSale: number;
   monthlyTarget: number;
+  isSmall?: boolean;
 }
 interface AgentSheetProps {
   memberData: MembersDetailsProps;
@@ -175,4 +176,22 @@ interface AgentSheetProps {
 interface AddAgentDataContainerProps {
   memberId: string;
   organizationId: string;
+}
+interface OrganizationsWithMembersProps {
+  id: string;
+  imageUrl: string;
+  organizationName: string;
+  organizationKeyword: string;
+  members?: {
+    id: string;
+    imageUrl: string;
+    name: string;
+    email: string;
+    monthlyTarget: number;
+    currentSale: number;
+    targetCurrency: string;
+    sales: Sales[];
+    calendarDays: CalendarDaysProps[];
+    createdAt: string;
+  }[];
 }

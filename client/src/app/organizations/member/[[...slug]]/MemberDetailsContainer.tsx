@@ -50,7 +50,7 @@ const MemberDetailsContainer = ({
     memberId,
   });
   const [deleteMember] = useDeleteMemberMutation();
-
+  console.log(memberData);
   if (isMemberLoading) {
     return (
       <div className="flex w-full h-screen items-center justify-center">
