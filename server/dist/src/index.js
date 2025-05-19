@@ -30,7 +30,7 @@ app.use(body_parser_1.default.urlencoded({ extended: false }));
 app.use((0, cookie_parser_1.default)());
 app.use((0, cors_1.default)());
 app.use("/admin", (0, authMiddleware_1.authMiddleware)(["admin"]), adminRoutes_1.default);
-app.use("/agent", (0, authMiddleware_1.authMiddleware)(["agent"]), agentRoutes_1.default);
+app.use("/agent", agentRoutes_1.default);
 app.use("/organizations", (0, authMiddleware_1.authMiddleware)(["admin", "agent"]), organizationRoutes_1.default);
 app.use("/members", (0, authMiddleware_1.authMiddleware)(["admin"]), memberRoutes_1.default);
 app.use("/sale", (0, authMiddleware_1.authMiddleware)(["admin", "agent"]), saleRoutes_1.default);

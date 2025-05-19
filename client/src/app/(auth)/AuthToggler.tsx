@@ -3,11 +3,15 @@ import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
 
 export const AuthToggler = ({ role, setRole }: AuthTogglerProps) => {
-  const isAdminLogin = true;
+  const handleToggle = (roleStr: "admin" | "agent") => {
+    setRole(roleStr);
+    // window.location.reload();
+  };
+
   return (
     <div className="bg-brand-200 w-full rounded-lg flex items-center justify-center space-x-2 mt-4 p-1.5">
       <Button
-        onClick={() => setRole("admin")}
+        onClick={() => handleToggle("admin")}
         className={cn(
           "group flex-1 py-6",
           role === "admin"
@@ -24,7 +28,7 @@ export const AuthToggler = ({ role, setRole }: AuthTogglerProps) => {
         />
       </Button>
       <Button
-        onClick={() => setRole("agent")}
+        onClick={() => handleToggle("agent")}
         className={cn(
           "group flex-1 py-6",
           role === "admin"

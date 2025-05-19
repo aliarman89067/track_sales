@@ -371,3 +371,63 @@ export const getOrganizationsWithMembers = async (
     res.status(400).json({ message: "Failed to fetch oraganizations" });
   }
 };
+
+export const deleteOrganization = async (req: Request, res: Response) => {
+  const { organizationId } = req.params;
+  try {
+    if (!organizationId) {
+      res.status(404).json({ message: "OrganizationId is not provided!" });
+      return;
+    }
+    await prisma.organization.delete({
+      where: {
+        id: organizationId,
+      },
+    });
+    res.status(200).json({ message: "Organization Delete Successfully!" });
+  } catch (error: any) {
+    console.log(error);
+    res.status(500).json({
+      message: `Failed to delete organization ${error.message ?? error}`,
+    });
+  }
+};
+
+export const getAgentOrganizations = async (req: Request, res: Response) => {
+  try {
+    const id = req.user?.id;
+    if (!id) {
+      res.status(404).json({ message: "Agent id is not exist in middleware!" });
+      return;
+    }
+    // Find Agent
+    const existingAgent = await prisma.agent.findFirst({
+      where: {
+        id,
+      },
+    });
+    if (!existingAgent) {
+      res.status(404).json({ message: "Agent is not found!" });
+      return;
+    }
+    // Get all organization with only that agent
+    const organizations = await prisma.member.findMany({
+      where: {
+        email: "luddo8906@gmail.com",
+      },
+      include: {
+        organization: {
+          include: {
+            members: false,
+          },
+        },
+      },
+    });
+    res.status(200).json(organizations);
+  } catch (error: any) {
+    console.log(error);
+    res.status(500).json({
+      message: `Failed to get organizations ${error.message ?? error}`,
+    });
+  }
+};

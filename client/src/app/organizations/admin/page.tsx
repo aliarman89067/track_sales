@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { openAlertDialog } from "@/state";
+import { openAlertDialog, openOrgDialog } from "@/state";
 import {
   useGetAuthUserQuery,
   useGetMemberOrganizationQuery,
@@ -45,6 +45,10 @@ const AdminOrganizations = () => {
     if (!isAuthLoading && authData?.cognitoId) {
       refetch();
     }
+    if (authData && authData.role === "agent") {
+      router.push("/organizations/agent");
+      return;
+    }
     if (!containerRef.current) return;
     const items = containerRef.current.children;
     let target: Element | null = null;
@@ -62,6 +66,40 @@ const AdminOrganizations = () => {
     }, 1500);
     return () => clearTimeout(timeoutId);
   }, [isAuthLoading, authData?.cognitoId, organizationsData]);
+
+  const { isOrgDialogOpen, orgId, isOrgRemoved } = useAppSelector(
+    (state) => state.global
+  );
+  const dispatch = useAppDispatch();
+
+  const handleDeleteOrg = (orgId: string) => {
+    dispatch(
+      openOrgDialog({
+        openValue: true,
+        isRemoved: false,
+        orgId,
+      })
+    );
+  };
+
+  // useEffect(() => {
+  //   if (isOrgRemoved) {
+  //     setOrg((prev) => {
+  //       if (!prev || !prev.members || prev.members.length < 1) return prev;
+  //       return {
+  //         ...prev,
+  //         members: prev.members.filter((member) => member.id !== memberId),
+  //       };
+  //     });
+  //     dispatch(
+  //       openAlertDialog({
+  //         openValue: false,
+  //         isRemoved: false,
+  //         memberId: "",
+  //       })
+  //     );
+  //   }
+  // }, [isOrgRemoved]);
 
   if (isAuthLoading || isOrganizationsLoading) {
     return (
@@ -171,7 +209,13 @@ const AdminOrganizations = () => {
                           >
                             Update Organization
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="bg-red-400 hover:bg-red-500 focus:bg-red-500 focus:text-white text-white transition-all duration-150 ease-linear">
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteOrg(organization.id);
+                            }}
+                            className="bg-red-400 hover:bg-red-500 focus:bg-red-500 focus:text-white text-white transition-all duration-150 ease-linear"
+                          >
                             Delete Organization
                           </DropdownMenuItem>
                         </DropdownMenuContent>

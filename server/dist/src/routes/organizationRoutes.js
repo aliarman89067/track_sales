@@ -12,4 +12,6 @@ router.get("/:organizationId/:adminCognitoId", organizationController_1.getOrgan
 router.post("/", organizationController_1.createOrganization);
 router.get("/members/:organizationId/:adminCognitoId", organizationController_1.getOrganizationMembers);
 router.post("/update", organizationController_1.updateOrganization);
+router.delete("/delete/:organizationId", organizationController_1.deleteOrganization);
+router.post("/get-agent", organizationController_1.getAgentOrganizations);
 exports.default = router;

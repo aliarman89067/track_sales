@@ -27,7 +27,7 @@ const OrganizationsLayout = ({ children }: PropsWithChildren) => {
         } else {
           router.push("/organizations/admin");
         }
-      } else if (authData?.cognitoId && authData?.role === "agent") {
+      } else if (authData?.role === "agent") {
         router.push("/organizations/agent");
       }
     }

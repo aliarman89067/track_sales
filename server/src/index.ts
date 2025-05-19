@@ -28,7 +28,7 @@ app.use(cookieParser());
 app.use(cors());
 
 app.use("/admin", authMiddleware(["admin"]), adminRoutes);
-app.use("/agent", authMiddleware(["agent"]), agentRoutes);
+app.use("/agent", agentRoutes);
 app.use(
   "/organizations",
   authMiddleware(["admin", "agent"]),

@@ -103,6 +103,16 @@ export const addNewSale = async (req: Request, res: Response) => {
         createdAt: date.toDateString(),
       },
     });
+    let pastCurrentSale = 0;
+    const existingCurrentCalendar = await prisma.calendarDays.findFirst({
+      where: {
+        memberId,
+        date: date.toISOString().split("T")[0],
+      },
+    });
+    if (existingCurrentCalendar && existingCurrentCalendar.status === "SALE") {
+      pastCurrentSale = Number(existingCurrentCalendar.sale);
+    }
     await prisma.calendarDays.updateMany({
       where: {
         memberId,
@@ -110,7 +120,7 @@ export const addNewSale = async (req: Request, res: Response) => {
       },
       data: {
         status: "SALE",
-        sale: response.totalPayment,
+        sale: JSON.stringify(Number(response.totalPayment) + pastCurrentSale),
       },
     });
     res.status(201).json(response);

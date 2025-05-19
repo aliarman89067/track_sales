@@ -41,14 +41,22 @@ model Admin {
 }
 model Agent {
   id            String @id @default(uuid())
-  cognitoId     String @unique
   agentName     String
   email         String @unique
   phoneNumber   String?
   imageUrl      String @default("/defaultPersonImage.png")
   role          USER_ROLE
+  isVerified    Boolean @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+model ValidateAgent {
+  id            String @id @default(uuid())
+  agentId       String
+  email         String
+  code          String
+  expData       BigInt
+  createdAt      DateTime @default(now())
 }
 model Organization {
   id                  String @id @default(uuid())

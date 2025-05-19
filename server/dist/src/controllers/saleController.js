@@ -92,6 +92,16 @@ const addNewSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 createdAt: date.toDateString(),
             },
         });
+        let pastCurrentSale = 0;
+        const existingCurrentCalendar = yield prisma.calendarDays.findFirst({
+            where: {
+                memberId,
+                date: date.toISOString().split("T")[0],
+            },
+        });
+        if (existingCurrentCalendar && existingCurrentCalendar.status === "SALE") {
+            pastCurrentSale = Number(existingCurrentCalendar.sale);
+        }
         yield prisma.calendarDays.updateMany({
             where: {
                 memberId,
@@ -99,7 +109,7 @@ const addNewSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             },
             data: {
                 status: "SALE",
-                sale: response.totalPayment,
+                sale: JSON.stringify(Number(response.totalPayment) + pastCurrentSale),
             },
         });
         res.status(201).json(response);

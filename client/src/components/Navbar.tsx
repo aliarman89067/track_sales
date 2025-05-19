@@ -2,40 +2,103 @@
 import Link from "next/link";
 import { CTASecondaryButton } from "./CTASecondaryButton";
 import { NAVBAR_HEIGHT } from "@/constant/values";
-import { useRouter } from "next/navigation";
-import { useDeleteMemberMutation, useGetAuthUserQuery } from "@/state/api";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  useDeleteMemberMutation,
+  useDeleteOrganizationMutation,
+  useGetAuthUserQuery,
+} from "@/state/api";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import { NAVBAR_LINKS } from "@/constant/data";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { useAppDispatch, useAppSelector } from "@/state/redux";
-import { openAlertDialog } from "@/state";
+import { openAlertDialog, openOrgDialog } from "@/state";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { signOut } from "@aws-amplify/auth";
 
 export const Navbar = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const { data, isLoading } = useGetAuthUserQuery();
   const [removeMember] = useDeleteMemberMutation();
-
-  const { isAlertDialogOpen, memberId, isMemberRemoved } = useAppSelector(
-    (state) => state.global
-  );
+  const [removeOrganization] = useDeleteOrganizationMutation();
+  console.log(data);
+  const { isAlertDialogOpen, memberId, isOrgDialogOpen, orgId } =
+    useAppSelector((state) => state.global);
   const dispatch = useAppDispatch();
 
-  const handleMemberRemove = async () => {
-    try {
-      await removeMember({
-        memberId,
-      });
+  const handleClose = () => {
+    if (isAlertDialogOpen) {
       dispatch(
         openAlertDialog({
-          memberId,
-          isRemoved: true,
           openValue: false,
+          memberId: "",
+          isRemoved: false,
         })
       );
-    } catch (error) {
-      console.log(error);
+    } else if (isOrgDialogOpen) {
+      dispatch(
+        openOrgDialog({
+          openValue: false,
+          orgId: "",
+          isRemoved: false,
+        })
+      );
+    }
+  };
+
+  const handleRemove = async () => {
+    if (isAlertDialogOpen) {
+      try {
+        await removeMember({
+          memberId,
+        });
+        dispatch(
+          openAlertDialog({
+            memberId,
+            isRemoved: true,
+            openValue: false,
+          })
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    } else if (isOrgDialogOpen) {
+      try {
+        await removeOrganization({
+          organizationId: orgId,
+        });
+        dispatch(
+          openOrgDialog({
+            orgId,
+            isRemoved: true,
+            openValue: false,
+          })
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
+  const handleSignOut = async (role: string) => {
+    if (role === "admin") {
+      try {
+        if (pathname !== "/") {
+          router.replace("/");
+        }
+        await signOut();
+        window.location.reload();
+      } catch (error) {
+        console.log(error);
+      }
     }
   };
 
@@ -45,7 +108,7 @@ export const Navbar = () => {
       <div
         className={cn(
           "absolute top-0 left-0 w-screen h-screen bg-black/40 flex items-center justify-center z-[100] px-4 transition-all duration-150 ease-linear",
-          isAlertDialogOpen
+          isAlertDialogOpen || isOrgDialogOpen
             ? "opacity-100 pointer-events-auto select-auto"
             : "opacity-0 pointer-events-none select-none"
         )}
@@ -55,30 +118,24 @@ export const Navbar = () => {
             Are you sure?
           </h1>
           <p className="font-medium text-secondaryGray text-base">
-            This action cannot be undone. Member will remove from database
-            permenantly!
+            {isAlertDialogOpen && (
+              <>
+                This action cannot be undone. Member will remove from database
+                permenantly!
+              </>
+            )}
+            {isOrgDialogOpen && (
+              <>
+                This action cannot be undone. Organization will remove from
+                database permenantly!
+              </>
+            )}
           </p>
           <div className="mt-6 flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() =>
-                dispatch(
-                  openAlertDialog({
-                    openValue: false,
-                    memberId: "",
-                    isRemoved: false,
-                  })
-                )
-              }
-            >
+            <Button variant="outline" size="lg" onClick={handleClose}>
               Cancel
             </Button>
-            <Button
-              onClick={handleMemberRemove}
-              variant="destructive"
-              size="lg"
-            >
+            <Button onClick={handleRemove} variant="destructive" size="lg">
               Remove
             </Button>
           </div>
@@ -116,6 +173,11 @@ export const Navbar = () => {
               ))}
             </div>
           )}
+          {data && data.role === "agent" && (
+            <Link href={"/organizations/agent"}>
+              <span className="text-primaryGray text-base">Organizations</span>
+            </Link>
+          )}
         </div>
         {/* Right Part */}
         {isLoading ? (
@@ -130,16 +192,50 @@ export const Navbar = () => {
                   title="Add Agent"
                   onClick={() => router.push("/agent")}
                 />
-                <div className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center cursor-pointer bg-gray-200 shrink-0">
-                  <Image
-                    src={data.imageUrl}
-                    alt="user profile picture"
-                    width={40}
-                    height={40}
-                    className="w-6 h-6 object-cover"
-                  />
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center cursor-pointer bg-gray-200 shrink-0">
+                      <Image
+                        src={data.imageUrl}
+                        alt="user profile picture"
+                        width={40}
+                        height={40}
+                        className="w-6 h-6 object-cover"
+                      />
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-[170px] mr-5">
+                    <DropdownMenuItem
+                      onClick={() => handleSignOut("admin")}
+                      className="font-medium text-base text-primaryGray"
+                    >
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
+            ) : data && data.role === "agent" ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center cursor-pointer bg-gray-200 shrink-0">
+                    <Image
+                      src={data.imageUrl}
+                      alt="user profile picture"
+                      width={40}
+                      height={40}
+                      className="w-6 h-6 object-cover"
+                    />
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[170px] mr-5">
+                  <DropdownMenuItem
+                    onClick={() => handleSignOut("agent")}
+                    className="font-medium text-base text-primaryGray"
+                  >
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <div className="flex items-center gap-3">
                 <CTASecondaryButton

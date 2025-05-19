@@ -20,7 +20,12 @@ export const api = createApi({
     prepareHeaders: async (header) => {
       const session = await fetchAuthSession();
       const { idToken } = session.tokens ?? {};
-      header.set("Authorization", `Bearer ${idToken}`);
+      const agentToken = window.localStorage.getItem("track_sale_agent");
+      if (agentToken) {
+        header.set("Authorization", `Bearer ${agentToken}tokenTypeJWT`);
+      } else if (idToken) {
+        header.set("Authorization", `Bearer ${idToken}tokenTypeCOGNITO`);
+      }
     },
   }),
   reducerPath: "api",
@@ -29,33 +34,43 @@ export const api = createApi({
     getAuthUser: build.query<UserType | null, void>({
       queryFn: async (_, _api, _extraOptions, fetchWithBQ) => {
         const session = await fetchAuthSession();
-        if (!session.tokens) {
+        const token = window.localStorage.getItem("track_sale_agent");
+
+        let endpoint;
+        let userData;
+
+        if (session.tokens) {
+          // const { idToken } = session.tokens ?? {};
+          const user = await getCurrentUser();
+          endpoint = `/admin/${user.userId}`;
+          userData = {
+            id: user.userId,
+            name: user.username,
+            email: user?.signInDetails?.loginId || "",
+            phoneNumber: "",
+            role: "admin",
+          };
+        } else if (token) {
+          endpoint = "/agent";
+        } else {
           return {
             data: null,
           };
         }
-        const { idToken } = session.tokens ?? {};
-        const userRole = idToken?.payload["custom:role"] as string;
-        const user = await getCurrentUser();
-        const endpoint =
-          userRole.toLocaleLowerCase() === "admin"
-            ? `/admin/${user.userId}`
-            : `/agent/${user.userId}`;
-        let userApiResponse = await fetchWithBQ(endpoint);
+        let userApiResponse = await fetchWithBQ(endpoint!!);
+        // const userApiData = userApiResponse.data as {
+        //   role: string
+        // }
         if (userApiResponse.error && userApiResponse.error.status === 404) {
-          const name = getNameByRole({ userRole, idToken });
-
-          const userData = {
-            id: user.userId,
-            name,
-            email: user?.signInDetails?.loginId || "",
-            phoneNumber: "",
-            role: userRole,
-          };
           userApiResponse = await createNewUser({
-            userData,
+            userData: userData!!,
             fetchWithBQ,
           });
+        }
+        if (userApiResponse.error && userApiResponse.error.status === 401) {
+          return {
+            data: null,
+          };
         }
         return {
           data: {
@@ -73,7 +88,7 @@ export const api = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags: (result) => [{ type: "Admin" }],
+      invalidatesTags: (result) => [{ type: "Admin" }, { type: "Agent" }],
     }),
     getMemberOrganization: build.query<
       OrganizationsProps[],
@@ -82,7 +97,19 @@ export const api = createApi({
       query: ({ adminCognitoId }) => ({
         url: `/organizations/${adminCognitoId}`,
       }),
-      providesTags: (result) => [{ type: "Admin" }],
+      providesTags: (result) => [{ type: "Admin" }, { type: "Agent" }],
+    }),
+    getAgentOrganization: build.query<OrganizationsProps[], void>({
+      queryFn: async (_args, _api, _extraOpts, baseQuery) => {
+        const response = await baseQuery({
+          url: "/organizations/get-agent",
+          method: "POST",
+        });
+        return {
+          data: response.data as OrganizationsProps[],
+        };
+      },
+      providesTags: (result) => [{ type: "Admin" }, { type: "Agent" }],
     }),
     getOrganizationName: build.query<
       Partial<OrganizationsProps>,
@@ -91,6 +118,7 @@ export const api = createApi({
       query: ({ organizationId, adminCognitoId }) => ({
         url: `/organizations/${organizationId}/${adminCognitoId}`,
       }),
+      providesTags: (result) => [{ type: "Admin" }, { type: "Agent" }],
     }),
     addMembersInOrganization: build.mutation<
       MembersType,
@@ -101,6 +129,7 @@ export const api = createApi({
         method: "POST",
         body: { organizationId, adminCognitoId, members },
       }),
+      invalidatesTags: () => [{ type: "Admin" }, { type: "Agent" }],
     }),
     getOrganizationMembers: build.query<
       OrganizationsProps,
@@ -109,6 +138,7 @@ export const api = createApi({
       query: ({ organizationId, adminCognitoId }) => ({
         url: `/organizations/members/${organizationId}/${adminCognitoId}`,
       }),
+      providesTags: (result) => [{ type: "Admin" }, { type: "Agent" }],
     }),
     getMember: build.query<MembersDetailsProps, { memberId: string }>({
       query: ({ memberId }) => ({
@@ -217,6 +247,13 @@ export const api = createApi({
       }),
       invalidatesTags: (result) => [{ type: "Agent" }],
     }),
+    deleteOrganization: build.mutation<any, { organizationId: string }>({
+      query: ({ organizationId }) => ({
+        url: `/organizations/delete/${organizationId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result) => [{ type: "Agent" }, { type: "Admin" }],
+    }),
     updateOrganization: build.mutation<
       any,
       updateOrganizationType & {
@@ -240,6 +277,123 @@ export const api = createApi({
       }),
       providesTags: (result) => [{ type: "Admin" }, { type: "Agent" }],
     }),
+    loginAgent: build.mutation<
+      {
+        isVerified?: boolean;
+        validateId?: string;
+        isNotAdded?: boolean;
+        token?: string;
+      },
+      { email: string }
+    >({
+      queryFn: async (args, _api, _extraOpt, baseQuery) => {
+        const responseOfLogin = await baseQuery({
+          url: `/agent/${args.email}`,
+          method: "GET",
+        });
+        if (responseOfLogin.error && responseOfLogin.error.status === 404) {
+          // Agent is not found
+          const responseOfRegister = await baseQuery({
+            url: `/agent`,
+            method: "POST",
+            body: { email: args.email },
+          });
+          if (
+            responseOfRegister.error &&
+            responseOfRegister.error.status === 404
+          ) {
+            return {
+              data: {
+                isNotAdded: true,
+              },
+            };
+          }
+          const responseData = responseOfRegister.data as {
+            validateId: string;
+            token: string;
+            isVerified: boolean;
+          };
+          return {
+            data: {
+              isVerified: false,
+              validateId: responseData.validateId,
+              token: responseData.token,
+            },
+          };
+        }
+        // if (responseOfLogin.error && responseOfLogin.error.status === 401) {
+        //   // Agent is unauthorized
+        //   // const responseOfRegister = await baseQuery({
+        //   //   url: `/agent`,
+        //   //   method: "PUT",
+        //   //   body: args.email,
+        //   // });
+        //   const responseData = responseOfLogin.data as {
+        //     token: string;
+        //   };
+        //   return {
+        //     data: {
+        //       isVerified: false,
+        //       validateId: responseData.token,
+        //     },
+        //   };
+        // }
+        // Everything perfect
+        const loginData = responseOfLogin.data as {
+          token: string;
+          isVerified: boolean;
+        };
+        return {
+          data: {
+            isVerified: loginData.isVerified,
+            token: loginData.token,
+          },
+        };
+      },
+    }),
+    verifyAgent: build.mutation<
+      { status: "success" | "failed"; message: string },
+      { validateId: string; code: string }
+    >({
+      queryFn: async ({ validateId, code }, _api, _extraOpts, baseQuery) => {
+        const verifiedResponse = await baseQuery({
+          url: `/agent/verify`,
+          method: "PUT",
+          body: { validateId, code },
+        });
+        if (verifiedResponse.error && verifiedResponse.error.status === 404) {
+          // Wrong Code
+          return {
+            data: {
+              status: "failed",
+              message: "Please Enter the correct code.",
+            },
+          };
+        }
+        if (verifiedResponse.error && verifiedResponse.error.status === 410) {
+          // Expired Code
+          return {
+            data: {
+              status: "failed",
+              message: "Code is expired click on resend to get new code.",
+            },
+          };
+        }
+        return {
+          data: {
+            status: "success",
+            message: "Verification Completed.",
+          },
+        };
+      },
+    }),
+    resendCode: build.mutation<any, { validateId: string }>({
+      query: (args) => ({
+        url: "/agent/resend-code",
+        method: "PUT",
+        body: { validateId: args.validateId },
+      }),
+    }),
   }),
 });
 
@@ -257,4 +411,9 @@ export const {
   useDeleteMemberMutation,
   useUpdateOrganizationMutation,
   useGetMembersOrganizationQuery,
+  useDeleteOrganizationMutation,
+  useLoginAgentMutation,
+  useVerifyAgentMutation,
+  useResendCodeMutation,
+  useGetAgentOrganizationQuery,
 } = api;

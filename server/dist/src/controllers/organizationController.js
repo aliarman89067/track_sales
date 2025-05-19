@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOrganizationsWithMembers = exports.updateOrganization = exports.getOrganizationMembers = exports.createOrganization = exports.getOrganizationName = exports.getOrganizations = void 0;
+exports.getAgentOrganizations = exports.deleteOrganization = exports.getOrganizationsWithMembers = exports.updateOrganization = exports.getOrganizationMembers = exports.createOrganization = exports.getOrganizationName = exports.getOrganizations = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 const getOrganizations = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -281,3 +281,67 @@ const getOrganizationsWithMembers = (req, res) => __awaiter(void 0, void 0, void
     }
 });
 exports.getOrganizationsWithMembers = getOrganizationsWithMembers;
+const deleteOrganization = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const { organizationId } = req.params;
+    try {
+        if (!organizationId) {
+            res.status(404).json({ message: "OrganizationId is not provided!" });
+            return;
+        }
+        yield prisma.organization.delete({
+            where: {
+                id: organizationId,
+            },
+        });
+        res.status(200).json({ message: "Organization Delete Successfully!" });
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message: `Failed to delete organization ${(_a = error.message) !== null && _a !== void 0 ? _a : error}`,
+        });
+    }
+});
+exports.deleteOrganization = deleteOrganization;
+const getAgentOrganizations = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    try {
+        const id = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+        if (!id) {
+            res.status(404).json({ message: "Agent id is not exist in middleware!" });
+            return;
+        }
+        // Find Agent
+        const existingAgent = yield prisma.agent.findFirst({
+            where: {
+                id,
+            },
+        });
+        if (!existingAgent) {
+            res.status(404).json({ message: "Agent is not found!" });
+            return;
+        }
+        // Get all organization with only that agent
+        const organizations = yield prisma.member.findMany({
+            where: {
+                email: "luddo8906@gmail.com",
+            },
+            include: {
+                organization: {
+                    include: {
+                        members: false,
+                    },
+                },
+            },
+        });
+        res.status(200).json(organizations);
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message: `Failed to get organizations ${(_b = error.message) !== null && _b !== void 0 ? _b : error}`,
+        });
+    }
+});
+exports.getAgentOrganizations = getAgentOrganizations;

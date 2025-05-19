@@ -50,7 +50,6 @@ const DashboardAdminPage = () => {
       </div>
     );
   }
-
   return (
     <section className="max-w-screen-xl w-full mx-auto px-2 sm:px-4">
       <AppSidebar
@@ -58,7 +57,7 @@ const DashboardAdminPage = () => {
         setOrganization={setTargetOrganization}
         selectedOrganizationId={targetOrganization?.id!!}
       />
-      {organizationsData ? (
+      {organizationsData && organizationsData.length > 0 ? (
         <div className="flex max-w-screen-sm lg:max-w-screen-lg xl:max-w-screen-xl w-full mx-auto mt-3">
           {targetOrganization && (
             <div className="flex flex-col gap-8 w-full">
