@@ -29,7 +29,6 @@ export const Navbar = () => {
   const { data, isLoading } = useGetAuthUserQuery();
   const [removeMember] = useDeleteMemberMutation();
   const [removeOrganization] = useDeleteOrganizationMutation();
-  console.log(data);
   const { isAlertDialogOpen, memberId, isOrgDialogOpen, orgId } =
     useAppSelector((state) => state.global);
   const dispatch = useAppDispatch();
@@ -99,6 +98,10 @@ export const Navbar = () => {
       } catch (error) {
         console.log(error);
       }
+    }
+    if (role === "agent") {
+      window.localStorage.removeItem("track_sale_agent");
+      window.location.reload();
     }
   };
 
@@ -223,7 +226,7 @@ export const Navbar = () => {
                       alt="user profile picture"
                       width={40}
                       height={40}
-                      className="w-6 h-6 object-cover"
+                      className="w-6 h-6 object-cover rounded-full"
                     />
                   </div>
                 </DropdownMenuTrigger>

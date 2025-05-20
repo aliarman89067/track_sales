@@ -195,3 +195,12 @@ interface OrganizationsWithMembersProps {
     createdAt: string;
   }[];
 }
+interface MembersWithOrganizationProps {
+  id: string;
+  organization: {
+    id: string;
+    imageUrl: string;
+    organizationName: string;
+    organizationKeyword: string;
+  };
+}

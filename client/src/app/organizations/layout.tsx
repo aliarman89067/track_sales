@@ -16,10 +16,14 @@ const OrganizationsLayout = ({ children }: PropsWithChildren) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
+  console.log(authData);
   useEffect(() => {
-    const organizationId = searchParams.get("organizationId");
+    if (!isAuthLoading && !authData) {
+      router.push("/");
+      return;
+    }
 
+    const organizationId = searchParams.get("organizationId");
     if (pathname === "/organizations") {
       if (authData?.cognitoId && authData?.role === "admin") {
         if (organizationId) {

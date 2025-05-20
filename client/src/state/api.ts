@@ -99,14 +99,22 @@ export const api = createApi({
       }),
       providesTags: (result) => [{ type: "Admin" }, { type: "Agent" }],
     }),
-    getAgentOrganization: build.query<OrganizationsProps[], void>({
+    getAgentOrganization: build.query<
+      MembersWithOrganizationProps[] | null,
+      void
+    >({
       queryFn: async (_args, _api, _extraOpts, baseQuery) => {
+        const token = window.localStorage.getItem("track_sale_agent");
+        if (!token)
+          return {
+            data: null,
+          };
         const response = await baseQuery({
           url: "/organizations/get-agent",
           method: "POST",
         });
         return {
-          data: response.data as OrganizationsProps[],
+          data: response.data as MembersWithOrganizationProps[],
         };
       },
       providesTags: (result) => [{ type: "Admin" }, { type: "Agent" }],

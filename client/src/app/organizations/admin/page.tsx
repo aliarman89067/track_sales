@@ -165,7 +165,7 @@ const AdminOrganizations = () => {
                       <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
                         <Image
                           src={organization.imageUrl}
-                          alt="Organization Image"
+                          alt={`${organization.organizationName} image url`}
                           width={600}
                           height={600}
                           className="w-full h-full object-cover rounded-full"
@@ -333,9 +333,12 @@ const MemberRow = ({ organization }: { organization: OrganizationsProps }) => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     <DropdownMenuItem
-                      onClick={() =>
-                        router.push(`/organizations/member/update/${member.id}`)
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(
+                          `/organizations/member/update/${member.id}`
+                        );
+                      }}
                       className="bg-brand-400 hover:bg-brand-500 focus:bg-brand-500 focus:text-white text-white transition-all duration-150 ease-linear"
                     >
                       Update Member

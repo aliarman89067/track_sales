@@ -1,8 +1,12 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { BackButton } from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
-import { useDeleteMemberMutation, useGetMemberQuery } from "@/state/api";
+import {
+  useDeleteMemberMutation,
+  useGetAuthUserQuery,
+  useGetMemberQuery,
+} from "@/state/api";
 import {
   CircleAlert,
   Loader2,
@@ -43,6 +47,12 @@ const MemberDetailsContainer = ({
   const router = useRouter();
 
   const {
+    data: authData,
+    isLoading: isAuthLoading,
+    error: authError,
+  } = useGetAuthUserQuery();
+
+  const {
     data: memberData,
     isLoading: isMemberLoading,
     error: memberError,
@@ -50,8 +60,16 @@ const MemberDetailsContainer = ({
     memberId,
   });
   const [deleteMember] = useDeleteMemberMutation();
-  console.log(memberData);
-  if (isMemberLoading) {
+
+  // useEffect(() => {
+  //   if (!isAuthLoading && !authData) {
+  //     router.push("/");
+  //   } else if (!isAuthLoading && !authError) {
+  //     router.push("/");
+  //   }
+  // }, [isAuthLoading, authData]);
+
+  if (isMemberLoading || isAuthLoading) {
     return (
       <div className="flex w-full h-screen items-center justify-center">
         <div className="flex justify-center items-center gap-2">
@@ -121,79 +139,81 @@ const MemberDetailsContainer = ({
               Join at {format(memberData.createdAt, "dd-MMM-yyy")}
             </span>
           </div>
-          <div className="flex flex-col gap-4 items-center">
-            <div className="flex items-center justify-center gap-4 my-2">
-              <Button
-                onClick={() =>
-                  router.push(`/agent/add/data/${memberId}/${organizationId}`)
-                }
-                variant="outline"
-                size="lg"
-                className="shadow-md hover:shadow-lg text-primaryGray"
-              >
-                Add Data
-              </Button>
-              <Button
-                onClick={() => router.push(`/agent/add/leave/${memberId}`)}
-                variant="outline"
-                size="lg"
-                className="shadow-md hover:shadow-lg text-primaryGray"
-              >
-                Add Leave
-              </Button>
-            </div>
-            <Sheet>
-              <SheetTrigger asChild>
+          {authData && authData.role === "admin" && (
+            <div className="flex flex-col gap-4 items-center">
+              <div className="flex items-center justify-center gap-4 my-2">
                 <Button
-                  variant="primary"
+                  onClick={() =>
+                    router.push(`/agent/add/data/${memberId}/${organizationId}`)
+                  }
+                  variant="outline"
                   size="lg"
-                  className="flex items-center gap-2 shadow-md hover:shadow-lg"
+                  className="shadow-md hover:shadow-lg text-primaryGray"
                 >
-                  More Options
-                  <SettingsIcon />
+                  Add Data
                 </Button>
-              </SheetTrigger>
-              <SheetContent side="left">
-                <SheetHeader>
-                  <SheetTitle>More options</SheetTitle>
-                </SheetHeader>
-                <div className="flex flex-col mt-4 gap-2 w-full">
-                  <span
-                    onClick={handleUpdateMember}
-                    className="bg-gray-200 hover:bg-gray-300 py-4 px-3 rounded-md transition-all duration-150 ease-linear cursor-pointer"
+                <Button
+                  onClick={() => router.push(`/agent/add/leave/${memberId}`)}
+                  variant="outline"
+                  size="lg"
+                  className="shadow-md hover:shadow-lg text-primaryGray"
+                >
+                  Add Leave
+                </Button>
+              </div>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    className="flex items-center gap-2 shadow-md hover:shadow-lg"
                   >
-                    <h2 className="text-primaryGray text-lg font-medium">
-                      Update Member
-                    </h2>
-                  </span>
-                  <AlertDialog>
-                    <AlertDialogTrigger className="w-full flex-1">
-                      <div className="bg-red-400 hover:bg-red-500 py-4 px-3 w-full rounded-md transition-all duration-150 ease-linear cursor-pointer text-left">
-                        <h2 className="text-white text-lg font-medium">
-                          Delete Member
-                        </h2>
-                      </div>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are You Sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This process can't be undone and member data will
-                          remove permenantly from our servers
-                        </AlertDialogDescription>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleDeleteMember}>
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogHeader>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
+                    More Options
+                    <SettingsIcon />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left">
+                  <SheetHeader>
+                    <SheetTitle>More options</SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col mt-4 gap-2 w-full">
+                    <span
+                      onClick={handleUpdateMember}
+                      className="bg-gray-200 hover:bg-gray-300 py-4 px-3 rounded-md transition-all duration-150 ease-linear cursor-pointer"
+                    >
+                      <h2 className="text-primaryGray text-lg font-medium">
+                        Update Member
+                      </h2>
+                    </span>
+                    <AlertDialog>
+                      <AlertDialogTrigger className="w-full flex-1">
+                        <div className="bg-red-400 hover:bg-red-500 py-4 px-3 w-full rounded-md transition-all duration-150 ease-linear cursor-pointer text-left">
+                          <h2 className="text-white text-lg font-medium">
+                            Delete Member
+                          </h2>
+                        </div>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are You Sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This process can't be undone and member data will
+                            remove permenantly from our servers
+                          </AlertDialogDescription>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteMember}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogHeader>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          )}
           <div className="max-w-screen-md w-full hidden md:grid grid-cols-3 gap-5 lg:gap-10 mx-auto mt-8">
             <StatusBox
               title="Target"
