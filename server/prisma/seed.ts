@@ -236,64 +236,13 @@ const handleSeed = async () => {
   ];
   try {
     // Sales Date 1
-    salesData1.forEach(async (data) => {
-      await prisma.sale.create({
-        data: {
-          year: data.year,
-          month: data.month,
-          clientImageUrl: data.clientImageUrl,
-          clientName: data.clientName,
-          clientEmail: data.clientEmail,
-          totalPayment: data.totalPayment,
-          paidAmount: data.paidAmount,
-          remainingAmount: data.remainingAmount,
-          description: data.description,
-          organizationId: data.organizationId,
-          memberId: data.memberId,
-          createDate: data.createDate,
-          createdAt: data.createdAt,
-        },
-      });
-    });
-    // Sales Date 2
-    salesData2.forEach(async (data) => {
-      await prisma.sale.create({
-        data: {
-          year: data.year,
-          month: data.month,
-          clientImageUrl: data.clientImageUrl,
-          clientName: data.clientName,
-          clientEmail: data.clientEmail,
-          totalPayment: data.totalPayment,
-          paidAmount: data.paidAmount,
-          remainingAmount: data.remainingAmount,
-          description: data.description,
-          organizationId: data.organizationId,
-          memberId: data.memberId,
-          createDate: data.createDate,
-          createdAt: data.createdAt,
-        },
-      });
-    });
-    // Sales Date 3
-    salesData3.forEach(async (data) => {
-      await prisma.sale.create({
-        data: {
-          year: data.year,
-          month: data.month,
-          clientImageUrl: data.clientImageUrl,
-          clientName: data.clientName,
-          clientEmail: data.clientEmail,
-          totalPayment: data.totalPayment,
-          paidAmount: data.paidAmount,
-          remainingAmount: data.remainingAmount,
-          description: data.description,
-          organizationId: data.organizationId,
-          memberId: data.memberId,
-          createDate: data.createDate,
-          createdAt: data.createdAt,
-        },
-      });
+    await prisma.admin.create({
+      data: {
+        cognitoId: "14a81488-4011-7072-ef06-7d1ae28d2d84",
+        adminName: "Ali ARman",
+        email: "ali@gmail.com",
+        role: "admin",
+      },
     });
   } catch (error) {
     console.log(error);

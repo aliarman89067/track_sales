@@ -15,6 +15,10 @@ import saleRoutes from "./routes/saleRoutes";
 // MIDDLEWARE IMPORTS
 import { authMiddleware } from "./middleware.ts/authMiddleware";
 
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
 dotEnv.config();
 
 const app = express();
@@ -40,6 +44,11 @@ app.use("/sale", authMiddleware(["admin", "agent"]), saleRoutes);
 // TESTING ROUTE
 app.get("/", (req, res) => {
   res.send("Hello World");
+});
+
+app.get("/test", async (req, res) => {
+  const members = await prisma.admin.findMany();
+  res.json(members);
 });
 
 const PORT = process.env.PORT || 3001;
